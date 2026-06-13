@@ -1383,6 +1383,41 @@
     font-size: 12px;
   }
 
+  /* Editable Story Bank */
+  .editable-story-table .story-cell {
+    min-height: 22px; padding: 4px 6px; margin: -4px -6px;
+    border-radius: 5px; cursor: text; outline: none;
+    transition: background 0.12s, box-shadow 0.12s;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .editable-story-table .story-cell:hover { background: #f9fafb; }
+  .editable-story-table .story-cell:focus {
+    background: #fff; box-shadow: inset 0 0 0 1.5px var(--accent);
+  }
+  .editable-story-table .story-cell:empty::before {
+    content: 'Click to edit…';
+    color: #9ca3af; font-style: italic;
+  }
+  .story-remove-btn {
+    background: transparent; border: 1px solid transparent;
+    color: var(--muted); width: 26px; height: 26px; border-radius: 6px;
+    font-size: 12px; cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+  }
+  .editable-story-table tr:hover .story-remove-btn { opacity: 1; }
+  .story-remove-btn:hover { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+  .btn-add-story {
+    background: var(--accent); color: #fff; border: none;
+    padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+    box-shadow: 0 1px 3px rgba(79,70,229,0.25);
+  }
+  .btn-add-story:hover {
+    background: #4338ca; transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(79,70,229,0.35);
+  }
+
   /* ── Progress bar ── */
   .progress-bar-wrap {
     background: #2d2d4e;
@@ -2302,6 +2337,98 @@ function removeDreamCompany(idx) {
   renderDreamCompanies();
 }
 
+// ── Story Bank ────────────────────────────────────────────────────
+function loadStoryBank() {
+  try {
+    const raw = localStorage.getItem('pm_story_bank');
+    if (raw === null) return STORY_ROWS.map(r => ({ theme: r[1], source: r[2], result: r[3] }));
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch(e) { return []; }
+}
+function saveStoryBank(list) {
+  localStorage.setItem('pm_story_bank', JSON.stringify(list));
+}
+
+function renderStoryBank() {
+  const container = document.getElementById('story-bank-container');
+  if (!container) return;
+  const rows = loadStoryBank();
+  let html = `<table class="story-table editable-story-table">
+    <thead><tr>
+      <th style="width:48px">#</th>
+      <th style="width:24%">Story Theme</th>
+      <th style="width:28%">Source Experience</th>
+      <th>Key Result / Proof Point</th>
+      <th style="width:42px"></th>
+    </tr></thead>
+    <tbody>`;
+  if (rows.length === 0) {
+    html += `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--muted)">No stories yet — click "+ Add Story" below.</td></tr>`;
+  } else {
+    rows.forEach((r, i) => {
+      html += `<tr id="story-row-${i}">
+        <td class="story-num">${i + 1}</td>
+        <td><div class="story-cell" contenteditable="true"
+            onblur="updateStoryCell(${i}, 'theme', this.innerText)"
+            onkeydown="storyCellKey(event)">${escapeHtml(r.theme || '')}</div></td>
+        <td><div class="story-cell" contenteditable="true"
+            onblur="updateStoryCell(${i}, 'source', this.innerText)"
+            onkeydown="storyCellKey(event)">${escapeHtml(r.source || '')}</div></td>
+        <td><div class="story-cell" contenteditable="true"
+            onblur="updateStoryCell(${i}, 'result', this.innerText)"
+            onkeydown="storyCellKey(event)">${escapeHtml(r.result || '')}</div></td>
+        <td><button class="story-remove-btn" onclick="removeStoryRow(${i})" title="Remove">✕</button></td>
+      </tr>`;
+    });
+  }
+  html += `</tbody></table>`;
+  container.innerHTML = html;
+}
+
+function storyCellKey(e) {
+  // Enter (no shift) commits the edit; Esc cancels
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.target.blur(); }
+  if (e.key === 'Escape') { e.preventDefault(); e.target.blur(); }
+}
+
+function updateStoryCell(idx, field, value) {
+  const list = loadStoryBank();
+  if (!list[idx]) return;
+  const clean = (value || '').trim();
+  if (list[idx][field] === clean) return;
+  list[idx][field] = clean;
+  saveStoryBank(list);
+}
+
+function addStoryRow() {
+  const list = loadStoryBank();
+  list.push({ theme: '', source: '', result: '' });
+  saveStoryBank(list);
+  renderStoryBank();
+  // Focus the theme cell of the new row
+  setTimeout(() => {
+    const row = document.getElementById('story-row-' + (list.length - 1));
+    const cell = row?.querySelector('.story-cell');
+    if (cell) {
+      cell.focus();
+      // Place caret at end
+      const range = document.createRange();
+      range.selectNodeContents(cell); range.collapse(false);
+      const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+    }
+  }, 50);
+}
+
+function removeStoryRow(idx) {
+  const list = loadStoryBank();
+  const label = list[idx]?.theme || 'this story';
+  if (!confirm(`Remove "${label}" from the story bank?`)) return;
+  list.splice(idx, 1);
+  saveStoryBank(list);
+  renderStoryBank();
+}
+
 function renderContentSection(sec) {
   const id = sec.id;
   const content = sec.content || sec.intro || '';
@@ -2464,13 +2591,10 @@ function buildContent() {
     } else {
       // Special handling for specific sections
       if (sec.id === 'section_11_story_bank_your_12_essential_stories') {
-        html += `<table class="story-table">
-          <thead><tr><th>#</th><th>Story Theme</th><th>Source Experience</th><th>Key Result / Proof Point</th></tr></thead>
-          <tbody>`;
-        STORY_ROWS.forEach(r => {
-          html += `<tr><td class="story-num">${r[0]}</td><td>${escapeHtml(r[1])}</td><td>${escapeHtml(r[2])}</td><td>${escapeHtml(r[3])}</td></tr>`;
-        });
-        html += `</tbody></table>`;
+        html += `
+        <p style="font-size:14px;line-height:1.7;color:#374151;margin-bottom:18px">These 12 stories cover the full STAR question space. Edit any cell inline — your changes save automatically. Add new rows for stories specific to a role or company.</p>
+        <div id="story-bank-container"></div>
+        <div style="margin-top:14px"><button class="btn-add-story" onclick="addStoryRow()">+ Add Story</button></div>`;
       } else if (sec.id === 'section_12_company_research_template') {
         html += `
         <div class="dream-hero">
@@ -2508,6 +2632,7 @@ function buildContent() {
 
   main.innerHTML = html;
   renderDreamCompanies();
+  renderStoryBank();
   renderResumeSection();
   renderCuratedSection();
 }
