@@ -1605,10 +1605,6 @@
   <div id="sidebar-header">
     <h1>Product Management<br>Interview Guide</h1>
     <p>Aaditya Iyer · 2026</p>
-    <div class="progress-bar-wrap">
-      <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
-    </div>
-    <div class="progress-label" id="progress-label">0 / 0 answers edited</div>
   </div>
   <nav id="nav"></nav>
   <div id="sidebar-footer">
@@ -2001,9 +1997,6 @@ function updateProgress() {
       if (state[q.id] !== undefined && state[q.id] !== q.answer) edited++;
     });
   });
-  const pct = total ? Math.round(edited / total * 100) : 0;
-  document.getElementById('progress-fill').style.width = pct + '%';
-  document.getElementById('progress-label').textContent = `${edited} / ${total} answers edited`;
 }
 
 function showSection(id) {
