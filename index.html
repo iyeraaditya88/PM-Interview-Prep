@@ -1485,6 +1485,13 @@
   }
   .dream-card:hover .dream-remove { opacity: 1; }
   .dream-remove:hover { background: var(--danger-bg); color: var(--danger); border-color: rgba(248,113,113,0.35); }
+  .dream-done-btn {
+    padding: 5px 14px; font-size: 12px; font-weight: 600;
+    background: var(--accent); color: #fff; border: none;
+    border-radius: 6px; cursor: pointer; letter-spacing: 0.02em;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .dream-done-btn:hover { opacity: 0.85; transform: translateY(-1px); }
   .dream-chevron {
     color: var(--muted); font-size: 13px;
     transition: transform 0.2s; flex-shrink: 0;
@@ -2912,15 +2919,15 @@ function saveDreamCompanies(list) {
   localStorage.setItem('pm_dream_companies', JSON.stringify(list));
 }
 
-function logoElementHtml(c) {
+function logoElementHtml(c, idx) {
   const url = companyLogoUrl(c.name, c.domain);
-  const initial = ((c.name || '?').trim().charAt(0) || '?').toUpperCase();
-  if (!url) return `<div class="dream-logo dream-logo-fallback">${escapeHtml(initial)}</div>`;
-  // <img> with onerror fallback to letter
+  const num = (idx != null ? idx + 1 : 1);
+  if (!url) return `<div class="dream-logo dream-logo-fallback">${num}</div>`;
+  // <img> with onerror fallback to serial number
   return `<div class="dream-logo-wrap">
     <img class="dream-logo-img" src="${url}" alt=""
          onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-    <div class="dream-logo dream-logo-fallback" style="display:none">${escapeHtml(initial)}</div>
+    <div class="dream-logo dream-logo-fallback" style="display:none">${num}</div>
   </div>`;
 }
 
@@ -2942,12 +2949,12 @@ function renderDreamCompanies() {
     return `
     <div class="dream-card${expanded ? ' expanded' : ''}" id="dream-card-${i}">
       <div class="dream-row" onclick="toggleDreamCard(${i}, event)">
-        ${logoElementHtml(c)}
+        ${logoElementHtml(c, i)}
         <div class="dream-name-block">
           <input class="dream-name-input" type="text" value="${escapeHtml(c.name || '')}"
                  placeholder="Company name"
                  onclick="event.stopPropagation()"
-                 onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+                 onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();dreamNameBlur(${i},this.value);collapseDreamCard(${i});}"
                  onblur="dreamNameBlur(${i}, this.value)">
           ${!expanded && notesPreview ? `<div class="dream-name-sub">${escapeHtml(notesPreview)}${(c.notes || '').length > 80 ? '…' : ''}</div>` : ''}
         </div>
@@ -2965,9 +2972,20 @@ function renderDreamCompanies() {
         <textarea class="dream-notes" rows="4"
           placeholder="Why this company — mission alignment, product areas you'd want to work on, key contacts, recent news, prep status…"
           oninput="updateDreamCompany(${i}, 'notes', this.value)">${escapeHtml(c.notes || '')}</textarea>
+        <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+          <button class="dream-done-btn" onclick="event.stopPropagation();collapseDreamCard(${i})">Done ✓</button>
+        </div>
       </div>
     </div>`;
   }).join('');
+}
+
+function collapseDreamCard(idx) {
+  const list = loadDreamCompanies();
+  if (!list[idx]) return;
+  list[idx].expanded = false;
+  saveDreamCompanies(list);
+  renderDreamCompanies();
 }
 
 function toggleDreamCard(idx, e) {
