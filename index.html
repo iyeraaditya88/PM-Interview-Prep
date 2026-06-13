@@ -2618,6 +2618,7 @@ function showSection(id) {
   const navItem = document.getElementById('nav-' + id);
   if (navItem) navItem.classList.add('active');
   currentSection = id;
+  try { localStorage.setItem('pm_last_section', id); } catch(e) {}
   window.scrollTo(0, 0);
 }
 
@@ -4538,7 +4539,8 @@ function buildCuratedResults(comp) {
 buildNav();
 buildContent();
 updateProgress();
-showSection('intro');
+const _lastSection = (function(){ try { return localStorage.getItem('pm_last_section'); } catch(e) { return null; } })();
+showSection(_lastSection || 'intro');
 </script>
 
 <!-- PDF.js for PDF parsing -->
