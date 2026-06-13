@@ -2080,6 +2080,75 @@
 
   /* Save indicator visible in light side too */
   :root[data-theme="dark"] .save-indicator { color: var(--muted); }
+
+  /* ════════════════════════════════════════════════════════════════
+     CONTRAST FIXES round 2 — kill white-flash hovers, lift placeholders
+     ════════════════════════════════════════════════════════════════ */
+
+  /* Q-card answer panels — never flash to white */
+  :root[data-theme="dark"] .answer-rendered {
+    background: var(--answer-bg) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+  }
+  :root[data-theme="dark"] .answer-rendered:hover {
+    background: var(--bg-soft) !important;
+    border-color: rgba(129,140,248,0.35) !important;
+  }
+  :root[data-theme="dark"] .answer-textarea {
+    background: var(--input-bg) !important; color: var(--text) !important;
+    border-color: var(--border) !important;
+  }
+  :root[data-theme="dark"] .answer-textarea:focus {
+    background: var(--input-bg) !important; border-color: var(--accent) !important;
+    box-shadow: 0 0 0 4px var(--accent-ring);
+  }
+  :root[data-theme="dark"] .answer-rendered .al { color: var(--accent-2) !important; }
+  :root[data-theme="dark"] .edit-hint { color: var(--accent-2) !important; }
+  :root[data-theme="dark"] .btn-sm {
+    background: var(--bg-soft) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+  }
+  :root[data-theme="dark"] .btn-sm:hover {
+    background: var(--card-bg) !important;
+    border-color: var(--accent) !important;
+    color: var(--text-strong) !important;
+  }
+  :root[data-theme="dark"] .btn-sm.edited { border-color: var(--success) !important; color: var(--success) !important; }
+
+  /* Tables: subtler hover — no near-white flash */
+  :root[data-theme="dark"] .compare-table tr:hover td,
+  :root[data-theme="dark"] .questions-table tr:hover td,
+  :root[data-theme="dark"] .story-table tr:hover td {
+    background: rgba(129,140,248,0.06) !important;
+  }
+  :root[data-theme="dark"] .editable-story-table .story-cell:hover {
+    background: rgba(129,140,248,0.08) !important;
+  }
+
+  /* Placeholders: more legible (was too faint at --dim 64748b) */
+  :root[data-theme="dark"] input::placeholder,
+  :root[data-theme="dark"] textarea::placeholder,
+  :root[data-theme="dark"] .dream-notes::placeholder,
+  :root[data-theme="dark"] .doc-q-answer-area::placeholder,
+  :root[data-theme="dark"] .answer-textarea::placeholder {
+    color: #7a8aa8 !important;
+    opacity: 1;
+  }
+
+  /* Resume input textarea inside dream notes — soften background contrast */
+  :root[data-theme="dark"] .dream-notes {
+    background: rgba(255,255,255,0.025) !important;
+    border-color: var(--border) !important;
+  }
+  :root[data-theme="dark"] .dream-notes:focus {
+    background: var(--input-bg) !important; border-color: var(--accent) !important;
+  }
+
+  /* Curated learning answer body text */
+  :root[data-theme="dark"] .cc-body p,
+  :root[data-theme="dark"] .cc-body li { color: var(--text) !important; }
 </style>
 </head>
 <body>
