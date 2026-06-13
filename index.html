@@ -2624,24 +2624,30 @@ function renderAtsResume(raw) {
 
 // Inline ATS styles for download/print (self-contained — no var() vs root)
 const ATS_DOWNLOAD_CSS = `
-  body { font-family: Calibri, 'Segoe UI', Arial, sans-serif; font-size: 11pt;
-    line-height: 1.45; color: #1f2937; max-width: 8.5in; margin: 0.6in auto;
+  @page { size: letter; margin: 0.5in; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: Calibri, 'Segoe UI', Arial, sans-serif; font-size: 10.5pt;
+    line-height: 1.3; color: #1f2937; max-width: 7.5in; margin: 0.45in auto;
     padding: 0 0.5in; }
-  .ats-name { font-size: 20pt; font-weight: 700; color: #111827; margin: 0 0 2px; }
-  .ats-contact { font-size: 10pt; color: #4b5563; margin-bottom: 14px; }
-  .ats-section { font-size: 10.5pt; font-weight: 700; letter-spacing: 1.5px;
+  .ats-name { font-size: 17pt; font-weight: 700; color: #111827; margin: 0 0 1px; }
+  .ats-contact { font-size: 9.5pt; color: #4b5563; margin-bottom: 8px; }
+  .ats-section { font-size: 10pt; font-weight: 700; letter-spacing: 1.2px;
     text-transform: uppercase; color: #1f2937;
-    border-bottom: 1.2pt solid #1f2937; padding-bottom: 2px; margin: 14px 0 6px; }
-  .ats-jobline { display: flex; justify-content: space-between; gap: 16px;
-    margin-top: 8px; }
+    border-bottom: 1pt solid #1f2937; padding-bottom: 1px; margin: 9px 0 3px; }
+  .ats-jobline { display: flex; justify-content: space-between; gap: 12px;
+    margin-top: 5px; }
   .ats-jobline-left { font-weight: 700; color: #111827; }
-  .ats-jobline-right { color: #4b5563; font-size: 10.5pt; white-space: nowrap; }
-  .ats-subline { font-style: italic; color: #4b5563; font-size: 10.5pt; margin-bottom: 3px; }
-  .ats-bullet { padding-left: 18px; position: relative; margin: 2px 0; }
-  .ats-bullet::before { content: '•'; position: absolute; left: 4px; color: #1f2937; }
-  .ats-para { margin: 3px 0; }
+  .ats-jobline-right { color: #4b5563; font-size: 10pt; white-space: nowrap; }
+  .ats-subline { font-style: italic; color: #4b5563; font-size: 10pt; margin-bottom: 2px; }
+  .ats-bullet { padding-left: 15px; position: relative; margin: 1px 0; }
+  .ats-bullet::before { content: '•'; position: absolute; left: 3px; color: #1f2937; }
+  .ats-para { margin: 2px 0; }
   strong { font-weight: 700; } em { font-style: italic; }
-  @media print { body { margin: 0.5in; padding: 0; max-width: 100%; } }
+  @media print {
+    body { margin: 0; padding: 0; max-width: 100%; }
+    .ats-jobline, .ats-bullet { page-break-inside: avoid; }
+    .ats-section { page-break-after: avoid; }
+  }
 `;
 
 function buildAtsHtmlDoc(rawText, title) {
@@ -2749,7 +2755,10 @@ async function curateResume() {
   indicator.style.display = 'flex';
   resultBody.textContent = '';
 
-  const prompt = `You are an expert resume consultant. Tailor the candidate's resume for a specific job, producing an ATS-friendly output.
+  const baseWords = base.split(/\s+/).filter(Boolean).length;
+  const baseBullets = (base.match(/^[\s]*[-•·▪]/gm) || []).length;
+
+  const prompt = `You are an expert resume consultant. Tailor the candidate's resume for a specific job, producing an ATS-friendly output that fits on the SAME number of pages as the base resume.
 
 STRICT RULES:
 - Do NOT invent, fabricate, or exaggerate any experience, skill, or achievement
@@ -2760,6 +2769,16 @@ STRICT RULES:
 - Match terminology from the job description where the candidate already has that experience
 - Do NOT include any tailoring notes, change log, or explanations — output ONLY the resume itself
 - Do NOT include code fences, backticks, or any commentary before/after the resume
+
+LENGTH DISCIPLINE — CRITICAL:
+- The base resume has approximately ${baseWords} words and ${baseBullets} bullet points.
+- Your output MUST be AT OR BELOW that word count. Target: ${baseWords} words (±5%). Do NOT exceed ${Math.round(baseWords * 1.05)} words.
+- Do NOT add bullets. Do NOT split one bullet into two. If you must rewrite, keep each bullet to roughly the same length as the original.
+- Do NOT lengthen the Professional Summary — keep it to 2-3 short sentences (max 60 words).
+- Keep the Skills section as a single condensed block (pipe- or comma-separated). Do NOT make it a long list.
+- Prefer trimming over rewording. If the base bullet is already tight, leave it nearly verbatim.
+- If a bullet is irrelevant to this role, DROP it (don't pad with filler) — this keeps the page count down.
+- Education and Certifications: 1 line each. No multi-line entries unless they exist verbatim in the base.
 
 OUTPUT FORMAT — ATS-friendly Markdown (this exact structure):
 
