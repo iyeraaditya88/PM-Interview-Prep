@@ -736,6 +736,132 @@
   }
   .pro-tip strong { color: #b45309; }
 
+  /* ── Resume Management ── */
+  .resume-hero {
+    background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+    border-radius: 12px; padding: 28px 32px; margin-bottom: 24px; color: #fff;
+  }
+  .resume-hero h2 { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+  .resume-hero p { font-size: 13px; color: #a7f3d0; line-height: 1.6; max-width: 600px; }
+  .resume-hero .rh-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .resume-hero .rh-tag {
+    padding: 4px 12px; border-radius: 20px;
+    background: rgba(255,255,255,0.12); font-size: 11px; font-weight: 600; color: #d1fae5;
+  }
+  .resume-panel {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; margin-bottom: 20px;
+  }
+  .resume-panel-header {
+    padding: 14px 20px; background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .resume-panel-header h3 {
+    font-size: 14px; font-weight: 700; color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .resume-panel-header .rph-badge {
+    font-size: 10px; font-weight: 700; padding: 2px 8px;
+    border-radius: 10px; background: #d1fae5; color: #065f46;
+  }
+  .resume-base-area {
+    width: 100%; min-height: 340px; padding: 18px 20px;
+    font-size: 13px; line-height: 1.8; font-family: 'SF Mono', 'Fira Code', monospace;
+    border: none; background: transparent; color: var(--text);
+    resize: vertical; outline: none;
+  }
+  .resume-base-area::placeholder { color: #9ca3af; font-style: italic; font-family: inherit; }
+  .resume-base-area:focus { background: #fffdf8; }
+  .resume-panel-footer {
+    padding: 10px 20px; border-top: 1px solid var(--border);
+    background: var(--bg); display: flex; align-items: center; gap: 12px;
+  }
+  .resume-save-btn {
+    padding: 7px 18px; background: #059669; color: #fff;
+    border: none; border-radius: 6px; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .resume-save-btn:hover { background: #047857; }
+  .resume-save-btn.saved { background: #047857; }
+  .resume-char-count { font-size: 11px; color: var(--muted); margin-left: auto; }
+  .resume-curate-panel {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; margin-bottom: 20px;
+  }
+  .resume-curate-header {
+    padding: 20px 24px;
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+    color: #fff;
+  }
+  .resume-curate-header h3 { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+  .resume-curate-header p { font-size: 12px; color: #c7d2fe; line-height: 1.5; }
+  .resume-curate-body { padding: 20px 24px; }
+  .resume-curate-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 700px) { .resume-curate-row { grid-template-columns: 1fr; } }
+  .resume-field-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.07em; color: var(--muted); margin-bottom: 6px;
+  }
+  .resume-field-input {
+    width: 100%; padding: 9px 14px; font-size: 13px; font-family: inherit;
+    border: 1px solid var(--border); border-radius: 7px;
+    background: var(--bg); color: var(--text); outline: none;
+    transition: border-color 0.15s;
+  }
+  .resume-field-input:focus { border-color: var(--accent); background: #fff; }
+  .resume-jd-area {
+    width: 100%; min-height: 160px; padding: 12px 14px;
+    font-size: 13px; line-height: 1.7; font-family: inherit;
+    border: 1px solid var(--border); border-radius: 7px;
+    background: var(--bg); color: var(--text); resize: vertical; outline: none;
+  }
+  .resume-jd-area:focus { border-color: var(--accent); background: #fff; }
+  .resume-curate-btn {
+    padding: 11px 28px; background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #fff; border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    transition: opacity 0.15s; margin-top: 4px;
+  }
+  .resume-curate-btn:hover { opacity: 0.9; }
+  .resume-curate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .resume-disclaimer {
+    margin-top: 12px; padding: 10px 14px;
+    background: #fffbf0; border: 1px solid #f59e0b;
+    border-radius: 7px; font-size: 12px; color: #92400e; line-height: 1.5;
+  }
+  .resume-result-panel {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; margin-bottom: 20px; display: none;
+  }
+  .resume-result-panel.visible { display: block; }
+  .resume-result-header {
+    padding: 14px 20px; background: linear-gradient(135deg, #064e3b, #065f46);
+    color: #fff; display: flex; align-items: center; justify-content: space-between;
+  }
+  .resume-result-header h3 { font-size: 14px; font-weight: 700; }
+  .resume-result-actions { display: flex; gap: 8px; }
+  .resume-result-btn {
+    padding: 5px 14px; border-radius: 5px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.1); color: #fff; transition: background 0.15s;
+  }
+  .resume-result-btn:hover { background: rgba(255,255,255,0.2); }
+  .resume-result-body {
+    padding: 24px; font-size: 13px; line-height: 1.9; color: var(--text);
+    white-space: pre-wrap; font-family: 'SF Mono', 'Fira Code', monospace;
+    min-height: 200px;
+  }
+  .resume-stream-indicator {
+    padding: 16px 24px; color: var(--muted); font-size: 13px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .resume-no-base {
+    padding: 32px 24px; text-align: center; color: var(--muted); font-size: 14px;
+  }
+  .resume-no-base span { font-size: 32px; display: block; margin-bottom: 10px; }
+
   /* ── Curated Learning ── */
   .curated-intro {
     background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
@@ -1744,6 +1870,7 @@ function buildNav() {
   });
 
   html += '<div class="nav-section-label">AI Prep</div>';
+  html += `<a class="nav-item" id="nav-resume_management" onclick="showSection('resume_management')">&#128196; Resume Management</a>`;
   html += `<a class="nav-item" id="nav-curated_learning" onclick="showSection('curated_learning')">&#10024; Curated Learning</a>`;
   // Add a nav sub-item per saved company
   const cl = loadCuratedState();
@@ -2004,6 +2131,15 @@ function buildContent() {
     html += `</div>`;
   });
 
+  // Resume Management section
+  html += `<div class="section-view" id="sec-resume_management">
+    <div class="section-header">
+      <div class="section-number">AI-POWERED</div>
+      <div class="section-title">Resume Management</div>
+    </div>
+    <div id="resume-management-body"></div>
+  </div>`;
+
   // Curated Learning section
   html += `<div class="section-view" id="sec-curated_learning">
     <div class="section-header">
@@ -2015,7 +2151,282 @@ function buildContent() {
 
   main.innerHTML = html;
   renderCompanySection();
+  renderResumeSection();
   renderCuratedSection();
+}
+
+// ── Resume Management ─────────────────────────────────────────────
+
+function loadResumeState() {
+  try { return JSON.parse(localStorage.getItem('pm_resume') || '{}'); } catch(e) { return {}; }
+}
+function saveResumeState(state) {
+  localStorage.setItem('pm_resume', JSON.stringify(state));
+}
+
+function saveBaseResume() {
+  const ta = document.getElementById('base-resume-ta');
+  if (!ta) return;
+  const state = loadResumeState();
+  state.base = ta.value;
+  state.baseSaved = Date.now();
+  saveResumeState(state);
+  const btn = document.getElementById('resume-save-btn');
+  const status = document.getElementById('resume-save-status');
+  if (btn) { btn.textContent = '✓ Saved'; btn.classList.add('saved'); setTimeout(()=>{ btn.textContent='Save Resume'; btn.classList.remove('saved'); },1800); }
+  if (status) { status.textContent = 'Saved ' + new Date().toLocaleTimeString(); }
+  updateResumeCharCount();
+}
+
+function updateResumeCharCount() {
+  const ta = document.getElementById('base-resume-ta');
+  const counter = document.getElementById('resume-char-count');
+  if (ta && counter) counter.textContent = ta.value.length.toLocaleString() + ' characters';
+}
+
+function copyResumeResult() {
+  const body = document.getElementById('resume-result-body');
+  if (!body) return;
+  navigator.clipboard.writeText(body.textContent).then(()=>{
+    const btn = document.getElementById('copy-resume-btn');
+    if (btn) { btn.textContent = '✓ Copied'; setTimeout(()=>btn.textContent='Copy',1500); }
+  });
+}
+
+function saveResumeResult() {
+  const body = document.getElementById('resume-result-body');
+  if (!body) return;
+  const state = loadResumeState();
+  const results = state.results || [];
+  results.unshift({ id: Date.now(), text: body.textContent, company: document.getElementById('resume-company-input')?.value || '', role: document.getElementById('resume-role-input')?.value || '', date: new Date().toLocaleDateString() });
+  state.results = results.slice(0, 10); // keep last 10
+  saveResumeState(state);
+  renderResumeSection();
+}
+
+async function curateResume() {
+  const base = document.getElementById('base-resume-ta')?.value?.trim();
+  const jd   = document.getElementById('resume-jd-ta')?.value?.trim();
+  const company = document.getElementById('resume-company-input')?.value?.trim() || '';
+  const role    = document.getElementById('resume-role-input')?.value?.trim() || '';
+
+  if (!base) { alert('Please save your base resume first.'); return; }
+  if (!jd)   { alert('Please paste the job description.'); return; }
+
+  const apiKey = getApiKey();
+  if (!apiKey) { alert('Please set your Anthropic API key in Settings.'); openSettings(); return; }
+
+  const btn = document.getElementById('curate-resume-btn');
+  const result = document.getElementById('resume-result-panel');
+  const resultBody = document.getElementById('resume-result-body');
+  const indicator = document.getElementById('resume-stream-indicator');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="stream-dots"><span></span><span></span><span></span></span> Curating…';
+  result.classList.add('visible');
+  resultBody.style.display = 'none';
+  indicator.style.display = 'flex';
+  resultBody.textContent = '';
+
+  const prompt = `You are an expert resume consultant helping a candidate tailor their resume for a specific job.
+
+IMPORTANT RULES:
+- Do NOT invent, fabricate, or exaggerate any experience, skill, or achievement
+- Do NOT add anything that is not already in the base resume
+- Your job is ONLY to: reorder, reword, and highlight existing content to best match the job description
+- Use stronger, more precise action verbs where appropriate
+- Quantify existing achievements more clearly if the numbers are already in the resume
+- Emphasize the skills and experiences most relevant to this role
+- Remove or de-emphasize content less relevant to this specific role
+- Match terminology from the job description where the candidate already has that experience
+
+BASE RESUME:
+${base}
+
+JOB DESCRIPTION${company ? ` — ${company}` : ''}${role ? ` / ${role}` : ''}:
+${jd}
+
+OUTPUT:
+Produce a tailored version of the resume. Keep the same overall structure but reorder sections/bullets to lead with the most relevant experience. Use the job description's language where it matches the candidate's actual experience. Add a brief 2-3 sentence "Professional Summary" at the top tailored to this specific role.
+
+After the resume, add a section called "TAILORING NOTES" that explains what you changed and why — so the candidate understands every modification made.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 4000,
+        stream: true,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!resp.ok) { const e = await resp.json(); throw new Error(e.error?.message || resp.statusText); }
+
+    indicator.style.display = 'none';
+    resultBody.style.display = 'block';
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6);
+        if (data === '[DONE]') continue;
+        try {
+          const ev = JSON.parse(data);
+          if (ev.type === 'content_block_delta' && ev.delta?.text) {
+            resultBody.textContent += ev.delta.text;
+            resultBody.scrollIntoView({ block: 'end', behavior: 'smooth' });
+          }
+        } catch(e) {}
+      }
+    }
+  } catch(err) {
+    indicator.style.display = 'none';
+    resultBody.style.display = 'block';
+    resultBody.textContent = 'Error: ' + err.message;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '✨ Curate Resume';
+  }
+}
+
+function renderResumeSection() {
+  const body = document.getElementById('resume-management-body');
+  if (!body) return;
+  const state = loadResumeState();
+  const base = state.base || '';
+  const savedTime = state.baseSaved ? new Date(state.baseSaved).toLocaleDateString() + ' ' + new Date(state.baseSaved).toLocaleTimeString() : '';
+  const charCount = base.length.toLocaleString();
+
+  body.innerHTML = `
+  <div class="resume-hero">
+    <h2>📄 Resume Management</h2>
+    <p>Store your base resume once. Then use AI to tailor it for any job — highlighting what matters most and articulating your real experience in the best possible light. No fabrication, ever.</p>
+    <div class="rh-tags">
+      <span class="rh-tag">✓ Highlights relevant experience</span>
+      <span class="rh-tag">✓ Stronger articulation</span>
+      <span class="rh-tag">✓ JD-matched language</span>
+      <span class="rh-tag">✗ No false info</span>
+    </div>
+  </div>
+
+  <!-- Base Resume -->
+  <div class="resume-panel">
+    <div class="resume-panel-header">
+      <h3>📋 Base Resume <span class="rph-badge">${base ? 'Saved' : 'Not saved'}</span></h3>
+      ${savedTime ? `<span style="font-size:11px;color:var(--muted)">Last saved: ${savedTime}</span>` : ''}
+    </div>
+    <textarea id="base-resume-ta" class="resume-base-area"
+      placeholder="Paste your full resume here. This is your master copy — all curations will be based on this.&#10;&#10;Include everything: work experience, education, skills, certifications, achievements, projects."
+      oninput="updateResumeCharCount()"
+    >${escapeHtml(base)}</textarea>
+    <div class="resume-panel-footer">
+      <button class="resume-save-btn" id="resume-save-btn" onclick="saveBaseResume()">Save Resume</button>
+      <span id="resume-save-status" style="font-size:11px;color:var(--muted)">${savedTime ? 'Last saved ' + savedTime : 'Unsaved'}</span>
+      <span class="resume-char-count" id="resume-char-count">${charCount} characters</span>
+    </div>
+  </div>
+
+  <!-- Curate for a Job -->
+  <div class="resume-curate-panel">
+    <div class="resume-curate-header">
+      <h3>✨ Curate for a Specific Job</h3>
+      <p>Paste the job description below. AI will tailor your resume to highlight the most relevant experience and match the role's language — using only what's already in your resume.</p>
+    </div>
+    <div class="resume-curate-body">
+      <div class="resume-curate-row">
+        <div>
+          <div class="resume-field-label">Company Name</div>
+          <input id="resume-company-input" class="resume-field-input" type="text" placeholder="e.g. Google, Meta, Stripe…">
+        </div>
+        <div>
+          <div class="resume-field-label">Role / Title</div>
+          <input id="resume-role-input" class="resume-field-input" type="text" placeholder="e.g. Principal Product Manager">
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div class="resume-field-label">Job Description</div>
+        <textarea id="resume-jd-ta" class="resume-jd-area" placeholder="Paste the full job description here…"></textarea>
+      </div>
+      <button class="resume-curate-btn" id="curate-resume-btn" onclick="curateResume()">✨ Curate Resume</button>
+      <div class="resume-disclaimer">
+        ⚠️ <strong>Honesty policy:</strong> The AI will only reorder, reword, and emphasize content already in your base resume. It will never add skills, experiences, or achievements you don't have. Every change will be explained in the "Tailoring Notes" section at the bottom of the output.
+      </div>
+    </div>
+  </div>
+
+  <!-- Result Panel -->
+  <div class="resume-result-panel" id="resume-result-panel">
+    <div class="resume-result-header">
+      <h3>✅ Curated Resume</h3>
+      <div class="resume-result-actions">
+        <button class="resume-result-btn" id="copy-resume-btn" onclick="copyResumeResult()">Copy</button>
+        <button class="resume-result-btn" onclick="saveResumeResult()">Save Version</button>
+      </div>
+    </div>
+    <div id="resume-stream-indicator" class="resume-stream-indicator" style="display:none">
+      <span class="stream-dots"><span></span><span></span><span></span></span> Tailoring your resume…
+    </div>
+    <div id="resume-result-body" class="resume-result-body" style="display:none"></div>
+  </div>
+
+  <!-- Saved Versions -->
+  ${(state.results||[]).length > 0 ? `
+  <div class="resume-panel">
+    <div class="resume-panel-header">
+      <h3>🗂 Saved Versions</h3>
+    </div>
+    <div style="padding:0">
+      ${(state.results||[]).map((r,i)=>`
+      <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">${escapeHtml(r.company||'Unnamed')} ${r.role ? '— ' + escapeHtml(r.role) : ''}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${r.date || ''} · ${(r.text||'').length.toLocaleString()} characters</div>
+        </div>
+        <button onclick="viewSavedResume(${i})" style="padding:5px 14px;border:1px solid var(--border);border-radius:5px;font-size:12px;cursor:pointer;background:var(--bg)">View</button>
+        <button onclick="deleteSavedResume(${i})" style="padding:5px 14px;border:1px solid var(--border);border-radius:5px;font-size:12px;cursor:pointer;background:var(--bg);color:#dc2626">Delete</button>
+      </div>`).join('')}
+    </div>
+  </div>` : ''}
+  `;
+}
+
+function viewSavedResume(idx) {
+  const state = loadResumeState();
+  const r = (state.results||[])[idx];
+  if (!r) return;
+  const panel = document.getElementById('resume-result-panel');
+  const body = document.getElementById('resume-result-body');
+  if (panel && body) {
+    panel.classList.add('visible');
+    body.style.display = 'block';
+    body.textContent = r.text;
+    panel.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function deleteSavedResume(idx) {
+  if (!confirm('Delete this saved version?')) return;
+  const state = loadResumeState();
+  (state.results||[]).splice(idx, 1);
+  saveResumeState(state);
+  renderResumeSection();
 }
 
 // ── Curated Learning ──────────────────────────────────────────────
