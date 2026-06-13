@@ -4,38 +4,176 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aaditya Iyer — Principal PM Interview Guide 2026</title>
+<script>
+  // Set theme as early as possible to avoid FOUC. Default = dark.
+  (function() {
+    try {
+      var t = localStorage.getItem('pm_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    } catch(e) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <style>
   :root {
-    --bg: #f9f9f7;
+    /* Light theme (fallback) */
+    --bg: #f7f7f5;
+    --bg-elev: #ffffff;
+    --bg-soft: #f3f4f6;
     --sidebar-bg: #1a1a2e;
     --sidebar-text: #c8ccd8;
     --sidebar-active: #ffffff;
     --sidebar-active-bg: #4f46e5;
     --sidebar-hover: #2d2d4e;
     --accent: #4f46e5;
+    --accent-2: #6366f1;
     --accent-light: #ede9fe;
+    --accent-ring: rgba(79,70,229,0.18);
     --text: #1e1e2e;
+    --text-strong: #0f172a;
     --muted: #6b7280;
+    --dim: #9ca3af;
     --border: #e5e7eb;
+    --border-strong: #d1d5db;
     --card-bg: #ffffff;
+    --card-elev: 0 1px 2px rgba(15,23,42,0.04), 0 1px 3px rgba(15,23,42,0.06);
+    --card-elev-hover: 0 6px 18px rgba(15,23,42,0.08), 0 2px 4px rgba(15,23,42,0.05);
     --q-bg: #f0f0ff;
     --answer-bg: #fafafa;
+    --input-bg: #ffffff;
+    --input-border: #d1d5db;
+    --input-focus-border: #4f46e5;
     --tag-bg: #e0e7ff;
     --tag-text: #3730a3;
     --success: #059669;
+    --success-bg: #ecfdf5;
     --warn: #d97706;
+    --warn-bg: #fffbeb;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --code-bg: #f3f4f6;
+    --scrollbar: rgba(0,0,0,0.18);
     --sidebar-width: 280px;
+  }
+
+  /* ── Dark theme (default) ── */
+  :root[data-theme="dark"] {
+    --bg: #0b1020;
+    --bg-elev: #131a2e;
+    --bg-soft: #1a2540;
+    --sidebar-bg: #0a0f1e;
+    --sidebar-text: #a0a8c0;
+    --sidebar-active: #ffffff;
+    --sidebar-active-bg: #6366f1;
+    --sidebar-hover: #1a2240;
+    --accent: #818cf8;
+    --accent-2: #a78bfa;
+    --accent-light: rgba(129,140,248,0.16);
+    --accent-ring: rgba(129,140,248,0.30);
+    --text: #e2e8f0;
+    --text-strong: #f1f5f9;
+    --muted: #94a3b8;
+    --dim: #64748b;
+    --border: #1f2a44;
+    --border-strong: #2a3a5e;
+    --card-bg: #131a2e;
+    --card-elev: 0 1px 2px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03);
+    --card-elev-hover: 0 8px 30px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+    --q-bg: #1a2240;
+    --answer-bg: #0f1626;
+    --input-bg: #0f1626;
+    --input-border: #1f2a44;
+    --input-focus-border: #818cf8;
+    --tag-bg: rgba(129,140,248,0.16);
+    --tag-text: #c7d2fe;
+    --success: #34d399;
+    --success-bg: rgba(52,211,153,0.10);
+    --warn: #fbbf24;
+    --warn-bg: rgba(251,191,36,0.10);
+    --danger: #f87171;
+    --danger-bg: rgba(248,113,113,0.10);
+    --code-bg: #0f1626;
+    --scrollbar: rgba(255,255,255,0.14);
+    color-scheme: dark;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
+  html, body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: var(--bg);
     color: var(--text);
     display: flex;
     min-height: 100vh;
+    letter-spacing: -0.005em;
+    transition: background 0.3s ease, color 0.3s ease;
   }
+
+  /* Subtle gradient backdrop in dark mode */
+  :root[data-theme="dark"] body {
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(129,140,248,0.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 30%, rgba(167,139,250,0.06), transparent 55%),
+      var(--bg);
+    background-attachment: fixed;
+  }
+
+  /* Custom scrollbars */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 10px; border: 2px solid transparent; background-clip: content-box; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); background-clip: content-box; }
+
+  /* Selection */
+  ::selection { background: var(--accent); color: #fff; }
+
+  /* Global form polish */
+  input[type="text"], input[type="password"], input[type="email"], input[type="search"],
+  textarea, select {
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-family: inherit; font-size: 13px; line-height: 1.45;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    outline: none;
+  }
+  input[type="text"]:hover, input[type="password"]:hover, input[type="email"]:hover,
+  input[type="search"]:hover, textarea:hover, select:hover {
+    border-color: var(--border-strong);
+  }
+  input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus,
+  input[type="search"]:focus, textarea:focus, select:focus {
+    border-color: var(--input-focus-border);
+    box-shadow: 0 0 0 4px var(--accent-ring);
+  }
+  textarea { resize: vertical; min-height: 64px; }
+  input::placeholder, textarea::placeholder { color: var(--dim); }
+  select {
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'><path d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat; background-position: right 12px center;
+    padding-right: 32px; cursor: pointer;
+  }
+
+  /* Headings */
+  h1, h2, h3, h4 { color: var(--text-strong); letter-spacing: -0.02em; line-height: 1.25; }
+
+  /* Links */
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
   /* ── Sidebar ── */
   #sidebar {
@@ -164,6 +302,17 @@
   }
   .hm-item:hover { background: #f3f4f6; }
   .hm-item + .hm-item { border-top: 1px solid var(--border); }
+  .hm-switch {
+    width: 34px; height: 20px; border-radius: 999px; background: #cbd5e1;
+    position: relative; transition: background 0.2s; flex-shrink: 0;
+  }
+  .hm-switch-knob {
+    position: absolute; top: 2px; left: 2px;
+    width: 16px; height: 16px; border-radius: 50%; background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: left 0.2s;
+  }
+  :root[data-theme="dark"] .hm-switch { background: var(--accent); }
+  :root[data-theme="dark"] .hm-switch-knob { left: 16px; background: #fff; }
   .hm-icon { font-size: 15px; }
   .hm-divider {
     padding: 8px 18px 10px;
@@ -1597,6 +1746,241 @@
   }
   .resume-parse-status.error { color: #dc2626; }
   .resume-parse-status.success { color: #059669; }
+
+  /* ════════════════════════════════════════════════════════════════
+     DARK MODE OVERRIDES — overrides hardcoded light-mode colors.
+     Variables already swap above; these handle hardcoded #fff, grays, etc.
+     ════════════════════════════════════════════════════════════════ */
+  :root[data-theme="dark"] .q-card,
+  :root[data-theme="dark"] .doc-q-card,
+  :root[data-theme="dark"] .resume-panel,
+  :root[data-theme="dark"] .resume-curate-panel,
+  :root[data-theme="dark"] .resume-result-panel,
+  :root[data-theme="dark"] .company-template,
+  :root[data-theme="dark"] .dream-card,
+  :root[data-theme="dark"] .week-block,
+  :root[data-theme="dark"] .modal,
+  :root[data-theme="dark"] .curated-card,
+  :root[data-theme="dark"] .framework-step,
+  :root[data-theme="dark"] .framework-card,
+  :root[data-theme="dark"] .framework-box,
+  :root[data-theme="dark"] .story-table {
+    background: var(--card-bg) !important;
+    border-color: var(--border) !important;
+    box-shadow: var(--card-elev);
+  }
+  :root[data-theme="dark"] .q-card:hover,
+  :root[data-theme="dark"] .doc-q-card:hover,
+  :root[data-theme="dark"] .dream-card:hover,
+  :root[data-theme="dark"] .curated-card:hover {
+    box-shadow: var(--card-elev-hover);
+    border-color: var(--border-strong) !important;
+  }
+  :root[data-theme="dark"] .intro-hero {
+    background: linear-gradient(135deg, #1a2240 0%, #131a2e 100%) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border);
+  }
+  :root[data-theme="dark"] .intro-hero h2,
+  :root[data-theme="dark"] .intro-hero .intro-role,
+  :root[data-theme="dark"] .intro-hero .intro-body { color: var(--text-strong) !important; }
+  :root[data-theme="dark"] .intro-stat .stat-val { color: var(--accent-2) !important; }
+  :root[data-theme="dark"] .intro-stat .stat-lbl { color: var(--muted) !important; }
+  :root[data-theme="dark"] .tag { background: var(--tag-bg) !important; color: var(--tag-text) !important; }
+  :root[data-theme="dark"] .section-intro { color: var(--muted) !important; }
+  :root[data-theme="dark"] .section-title,
+  :root[data-theme="dark"] .section-header { color: var(--text-strong) !important; }
+  :root[data-theme="dark"] .section-number { color: var(--accent-2) !important; }
+  :root[data-theme="dark"] .callout {
+    background: var(--bg-soft) !important; border-left-color: var(--accent) !important;
+    color: var(--text) !important;
+  }
+  :root[data-theme="dark"] .compare-table,
+  :root[data-theme="dark"] .questions-table,
+  :root[data-theme="dark"] .story-table {
+    background: var(--card-bg) !important; color: var(--text) !important;
+    border: 1px solid var(--border);
+  }
+  :root[data-theme="dark"] .compare-table th,
+  :root[data-theme="dark"] .questions-table th,
+  :root[data-theme="dark"] .story-table th {
+    background: var(--bg-soft) !important; color: var(--text-strong) !important;
+    border-bottom-color: var(--border) !important;
+  }
+  :root[data-theme="dark"] .compare-table td,
+  :root[data-theme="dark"] .questions-table td,
+  :root[data-theme="dark"] .story-table td {
+    border-bottom-color: var(--border) !important; color: var(--text) !important;
+  }
+  :root[data-theme="dark"] .compare-table tr:hover td,
+  :root[data-theme="dark"] .questions-table tr:hover td,
+  :root[data-theme="dark"] .story-table tr:hover td { background: var(--bg-soft) !important; }
+  :root[data-theme="dark"] .editable-story-table .story-cell:hover { background: var(--bg-soft) !important; }
+  :root[data-theme="dark"] .editable-story-table .story-cell:focus { background: var(--input-bg) !important; box-shadow: inset 0 0 0 1.5px var(--accent) !important; }
+  :root[data-theme="dark"] .cat-badge {
+    background: var(--tag-bg) !important; color: var(--tag-text) !important;
+  }
+  :root[data-theme="dark"] .cat-badge.culture { background: rgba(217,119,6,0.18) !important; color: #fbbf24 !important; }
+  :root[data-theme="dark"] .cat-badge.principal { background: rgba(124,58,237,0.20) !important; color: #c4b5fd !important; }
+  :root[data-theme="dark"] .cat-badge.interviewer { background: rgba(5,150,105,0.18) !important; color: #6ee7b7 !important; }
+  :root[data-theme="dark"] .pro-tip {
+    background: var(--warn-bg) !important; color: var(--text) !important;
+    border-left: 3px solid var(--warn) !important;
+  }
+  :root[data-theme="dark"] .week-header { color: var(--text-strong) !important; }
+  :root[data-theme="dark"] .week-bullets li { color: var(--text) !important; }
+
+  /* Q&A cards */
+  :root[data-theme="dark"] .q-question { color: var(--text-strong) !important; }
+  :root[data-theme="dark"] .q-answer-text { color: var(--text) !important; }
+  :root[data-theme="dark"] .answer-textarea {
+    background: var(--input-bg) !important; color: var(--text) !important;
+    border-color: var(--border) !important;
+  }
+  :root[data-theme="dark"] .answer-textarea:focus { border-color: var(--accent) !important; }
+  :root[data-theme="dark"] .additional-qs-header {
+    background: linear-gradient(135deg, var(--bg-soft) 0%, var(--bg-elev) 100%) !important;
+    border-color: var(--border) !important; color: var(--text) !important;
+  }
+
+  /* Sidebar refinements */
+  :root[data-theme="dark"] #sidebar {
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+  }
+  :root[data-theme="dark"] #sidebar-header h1 { color: #fff; }
+
+  /* Hamburger button — adapt to dark */
+  :root[data-theme="dark"] #hamburger-btn {
+    background: var(--card-bg); border-color: var(--border);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+  }
+  :root[data-theme="dark"] #hamburger-btn span { background: var(--text); }
+  :root[data-theme="dark"] #hamburger-menu {
+    background: var(--card-bg); border-color: var(--border);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+  }
+  :root[data-theme="dark"] .hm-item { color: var(--text); }
+  :root[data-theme="dark"] .hm-item:hover { background: var(--bg-soft); }
+  :root[data-theme="dark"] .hm-divider { color: var(--muted); border-top-color: var(--border); }
+
+  /* Resume Management dark polish */
+  :root[data-theme="dark"] .resume-hero {
+    background: linear-gradient(135deg, #1a2240 0%, #131a2e 100%) !important;
+    color: var(--text-strong) !important; border: 1px solid var(--border);
+  }
+  :root[data-theme="dark"] .rh-tag { background: rgba(255,255,255,0.06); color: var(--text); }
+  :root[data-theme="dark"] .resume-panel-header {
+    background: var(--bg-soft) !important; border-bottom-color: var(--border) !important;
+  }
+  :root[data-theme="dark"] .resume-panel-header h3 { color: var(--text-strong) !important; }
+  :root[data-theme="dark"] .rph-badge { background: var(--success-bg) !important; color: var(--success) !important; }
+  :root[data-theme="dark"] .resume-upload-zone {
+    background: var(--bg-soft) !important; border-color: var(--border) !important;
+  }
+  :root[data-theme="dark"] .resume-upload-zone:hover,
+  :root[data-theme="dark"] .resume-upload-zone.dragover {
+    background: var(--accent-light) !important; border-color: var(--accent) !important;
+  }
+  :root[data-theme="dark"] .resume-upload-zone h4 { color: var(--text-strong) !important; }
+  :root[data-theme="dark"] .resume-upload-zone p { color: var(--muted) !important; }
+  :root[data-theme="dark"] .uz-fmt { background: var(--card-bg) !important; color: var(--muted) !important; border-color: var(--border) !important; }
+  :root[data-theme="dark"] .rfi-card { background: linear-gradient(180deg, var(--bg-soft), var(--card-bg)) !important; }
+  :root[data-theme="dark"] .rfi-filename { color: var(--text-strong) !important; }
+  :root[data-theme="dark"] .rfi-stat { color: var(--muted) !important; }
+  :root[data-theme="dark"] .rfi-btn.replace { background: var(--accent); }
+  :root[data-theme="dark"] .rfi-btn.remove { background: var(--card-bg) !important; border-color: rgba(248,113,113,0.4) !important; color: var(--danger) !important; }
+  :root[data-theme="dark"] .rfi-btn.remove:hover { background: var(--danger-bg) !important; }
+  :root[data-theme="dark"] .resume-preview-toggle:hover { background: var(--bg-soft) !important; }
+  :root[data-theme="dark"] .resume-preview-toggle .rpt-left { color: var(--text) !important; }
+  :root[data-theme="dark"] .resume-preview-box { background: var(--input-bg) !important; }
+  :root[data-theme="dark"] .resume-curate-panel { border: 1px solid var(--border); }
+  :root[data-theme="dark"] .resume-curate-header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+    color: var(--text-strong) !important;
+  }
+  :root[data-theme="dark"] .resume-curate-header h3 { color: var(--text-strong) !important; }
+  :root[data-theme="dark"] .resume-curate-header p { color: var(--muted) !important; }
+  :root[data-theme="dark"] .resume-field-label { color: var(--muted) !important; }
+  :root[data-theme="dark"] .resume-field-input,
+  :root[data-theme="dark"] .resume-jd-area {
+    background: var(--input-bg) !important; border-color: var(--input-border) !important; color: var(--text) !important;
+  }
+  :root[data-theme="dark"] .resume-disclaimer {
+    background: var(--warn-bg) !important; color: var(--text) !important;
+    border: 1px solid rgba(251,191,36,0.25);
+  }
+  :root[data-theme="dark"] .resume-result-body { background: var(--card-bg) !important; color: var(--text) !important; }
+  :root[data-theme="dark"] .ats-name, :root[data-theme="dark"] .ats-jobline-left { color: var(--text-strong) !important; }
+  :root[data-theme="dark"] .ats-contact, :root[data-theme="dark"] .ats-subline, :root[data-theme="dark"] .ats-jobline-right { color: var(--muted) !important; }
+  :root[data-theme="dark"] .ats-section { color: var(--text-strong) !important; border-bottom-color: var(--accent) !important; }
+  :root[data-theme="dark"] .ats-bullet::before { color: var(--accent) !important; }
+
+  /* Dream Companies dark */
+  :root[data-theme="dark"] .dream-hero {
+    background: linear-gradient(135deg, rgba(129,140,248,0.10), rgba(167,139,250,0.05)) !important;
+    border-color: rgba(129,140,248,0.25) !important;
+  }
+  :root[data-theme="dark"] .dream-hero p { color: #c7d2fe !important; }
+  :root[data-theme="dark"] .dream-card:hover { border-color: rgba(129,140,248,0.35) !important; }
+  :root[data-theme="dark"] .dream-name-input { color: var(--text-strong) !important; }
+  :root[data-theme="dark"] .dream-notes { background: var(--input-bg) !important; color: var(--text) !important; border-color: var(--border) !important; }
+  :root[data-theme="dark"] .dream-remove:hover { background: var(--danger-bg) !important; color: var(--danger) !important; border-color: rgba(248,113,113,0.35) !important; }
+
+  /* Modals */
+  :root[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.65); }
+  :root[data-theme="dark"] .modal h2 { color: var(--text-strong); }
+  :root[data-theme="dark"] .modal-field input { background: var(--input-bg) !important; color: var(--text) !important; border-color: var(--border) !important; }
+  :root[data-theme="dark"] .modal-actions .btn-modal-cancel { background: var(--bg-soft) !important; color: var(--text) !important; border-color: var(--border) !important; }
+
+  /* Curated Learning dark */
+  :root[data-theme="dark"] .curated-intro {
+    background: linear-gradient(135deg, rgba(129,140,248,0.08), rgba(167,139,250,0.04)) !important;
+    border-color: rgba(129,140,248,0.20) !important; color: var(--text) !important;
+  }
+  :root[data-theme="dark"] .curated-card .cc-header { background: linear-gradient(135deg, var(--bg-soft), var(--card-bg)) !important; }
+  :root[data-theme="dark"] .cc-company { color: var(--text-strong) !important; }
+  :root[data-theme="dark"] .cc-meta { color: var(--muted) !important; }
+  :root[data-theme="dark"] .cc-body { color: var(--text) !important; }
+  :root[data-theme="dark"] .cc-section-label { color: var(--accent-2) !important; }
+
+  /* Buttons — softer in dark */
+  :root[data-theme="dark"] button { color-scheme: dark; }
+  :root[data-theme="dark"] .btn-add-company,
+  :root[data-theme="dark"] .btn-add-dream,
+  :root[data-theme="dark"] .btn-add-story,
+  :root[data-theme="dark"] .resume-curate-btn,
+  :root[data-theme="dark"] .resume-upload-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 4px 14px rgba(129,140,248,0.30);
+  }
+  :root[data-theme="dark"] .btn-delete-company { background: var(--danger-bg) !important; color: var(--danger) !important; border-color: rgba(248,113,113,0.30) !important; }
+
+  /* Inputs/textareas inside doc-q cards */
+  :root[data-theme="dark"] .doc-q-textarea {
+    background: var(--input-bg) !important; color: var(--text) !important; border-color: var(--border) !important;
+  }
+  :root[data-theme="dark"] .doc-q-textarea:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 4px var(--accent-ring) !important; }
+
+  /* Light-mode keep contrast where defaults previously dark */
+  :root:not([data-theme="dark"]) body {
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(79,70,229,0.05), transparent 60%),
+      var(--bg);
+    background-attachment: fixed;
+  }
+
+  /* Smooth theme transition for major surfaces */
+  .q-card, .doc-q-card, .resume-panel, .resume-curate-panel, .resume-result-panel,
+  .company-template, .dream-card, .modal, .curated-card, .compare-table,
+  .questions-table, .story-table, .callout, .pro-tip {
+    transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  /* Card lift on hover for richness */
+  .q-card:hover, .doc-q-card:hover, .dream-card:hover, .curated-card:hover {
+    transform: translateY(-1px);
+  }
 </style>
 </head>
 <body>
@@ -1617,6 +2001,11 @@
   <span></span><span></span><span></span>
 </button>
 <div id="hamburger-menu">
+  <button class="hm-item" id="theme-toggle-item" onclick="toggleTheme()">
+    <span class="hm-icon" id="theme-icon">🌙</span>
+    <span style="flex:1">Dark Mode</span>
+    <span class="hm-switch"><span class="hm-switch-knob"></span></span>
+  </button>
   <button class="hm-item" onclick="window.print();toggleHamburger()">
     <span class="hm-icon">🖨️</span> Print / Save as PDF
   </button>
@@ -3415,6 +3804,26 @@ function saveCuratedState(state) {
 }
 
 function getApiKey() { return localStorage.getItem('pm_api_key') || ''; }
+
+function toggleTheme() {
+  const root = document.documentElement;
+  const isDark = root.getAttribute('data-theme') === 'dark';
+  const next = isDark ? 'light' : 'dark';
+  root.setAttribute('data-theme', next);
+  try { localStorage.setItem('pm_theme', next); } catch(e) {}
+  const icon = document.getElementById('theme-icon');
+  if (icon) icon.textContent = next === 'dark' ? '🌙' : '☀️';
+}
+
+function applyInitialTheme() {
+  let saved;
+  try { saved = localStorage.getItem('pm_theme'); } catch(e) {}
+  const theme = saved || 'dark'; // default to dark
+  document.documentElement.setAttribute('data-theme', theme);
+  const icon = document.getElementById('theme-icon');
+  if (icon) icon.textContent = theme === 'dark' ? '🌙' : '☀️';
+}
+applyInitialTheme();
 
 function toggleHamburger() {
   const btn = document.getElementById('hamburger-btn');
