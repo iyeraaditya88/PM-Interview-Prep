@@ -1305,7 +1305,65 @@
     }
     .btn-add-company, .btn-delete-company { display: none !important; }
     .field-input { background: transparent !important; }
+  /* ── Resume Upload Zone ── */
+  .resume-upload-zone {
+    border: 2px dashed var(--border); border-radius: 12px;
+    padding: 48px 32px; text-align: center; cursor: pointer;
+    transition: all 0.2s; background: var(--bg); margin: 20px 0;
   }
+  .resume-upload-zone:hover, .resume-upload-zone.dragover {
+    border-color: var(--accent); background: var(--accent-light);
+  }
+  .resume-upload-zone .uz-icon { font-size: 40px; margin-bottom: 12px; display: block; }
+  .resume-upload-zone h4 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .resume-upload-zone p { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+  .resume-upload-zone .uz-formats {
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .resume-upload-zone .uz-fmt {
+    padding: 3px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
+    background: var(--card-bg); border: 1px solid var(--border); color: var(--muted);
+  }
+  .resume-upload-btn {
+    padding: 9px 24px; background: var(--accent); color: #fff;
+    border: none; border-radius: 7px; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .resume-upload-btn:hover { background: #4338ca; }
+  .resume-file-info {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 20px; background: #f0fdf4;
+    border: 1px solid #86efac; border-radius: 10px; margin: 16px 0;
+  }
+  .resume-file-info .rfi-icon { font-size: 28px; }
+  .resume-file-info .rfi-name { font-size: 14px; font-weight: 700; color: var(--text); }
+  .resume-file-info .rfi-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .resume-file-info .rfi-change {
+    margin-left: auto; padding: 6px 14px; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;
+    background: var(--card-bg); color: var(--text); transition: all 0.15s;
+  }
+  .resume-file-info .rfi-change:hover { background: var(--bg); }
+  .resume-preview-toggle {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 600; color: var(--accent);
+    cursor: pointer; user-select: none; margin: 8px 0;
+  }
+  .resume-preview-box {
+    max-height: 220px; overflow-y: auto;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px;
+    font-size: 12px; line-height: 1.7; color: #4b5563;
+    white-space: pre-wrap; font-family: 'SF Mono', monospace;
+    margin-bottom: 14px;
+  }
+  .resume-parse-status {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--muted); padding: 10px 0;
+  }
+  .resume-parse-status.error { color: #dc2626; }
+  .resume-parse-status.success { color: #059669; }
+}
 </style>
 </head>
 <body>
@@ -2164,24 +2222,93 @@ function saveResumeState(state) {
   localStorage.setItem('pm_resume', JSON.stringify(state));
 }
 
-function saveBaseResume() {
-  const ta = document.getElementById('base-resume-ta');
-  if (!ta) return;
-  const state = loadResumeState();
-  state.base = ta.value;
-  state.baseSaved = Date.now();
-  saveResumeState(state);
-  const btn = document.getElementById('resume-save-btn');
-  const status = document.getElementById('resume-save-status');
-  if (btn) { btn.textContent = '✓ Saved'; btn.classList.add('saved'); setTimeout(()=>{ btn.textContent='Save Resume'; btn.classList.remove('saved'); },1800); }
-  if (status) { status.textContent = 'Saved ' + new Date().toLocaleTimeString(); }
-  updateResumeCharCount();
+async function handleResumeFile(file) {
+  if (!file) return;
+  const status = document.getElementById('resume-parse-status');
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  const setStatus = (msg, cls) => {
+    if (status) { status.textContent = msg; status.className = 'resume-parse-status ' + (cls||''); }
+  };
+
+  setStatus('⏳ Reading file…');
+
+  try {
+    let text = '';
+    if (ext === 'txt') {
+      text = await file.text();
+    } else if (ext === 'pdf') {
+      if (typeof pdfjsLib === 'undefined') throw new Error('PDF library not loaded yet — please try again in a second.');
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const pages = [];
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        pages.push(content.items.map(item => item.str).join(' '));
+      }
+      text = pages.join('\n\n');
+    } else if (ext === 'docx') {
+      if (typeof mammoth === 'undefined') throw new Error('DOCX library not loaded yet — please try again in a second.');
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      text = result.value;
+    } else {
+      throw new Error('Unsupported file type. Please upload a PDF, DOCX, or TXT file.');
+    }
+
+    if (!text.trim()) throw new Error('Could not extract text from this file. Please try a different format.');
+
+    // Save to state
+    const state = loadResumeState();
+    state.base = text;
+    state.baseFile = { name: file.name, size: file.size, type: ext.toUpperCase(), saved: Date.now() };
+    state.baseSaved = Date.now();
+    saveResumeState(state);
+
+    setStatus('✓ Resume saved — ' + text.length.toLocaleString() + ' characters extracted', 'success');
+    renderResumeSection();
+  } catch(err) {
+    setStatus('✗ Error: ' + err.message, 'error');
+  }
 }
 
-function updateResumeCharCount() {
-  const ta = document.getElementById('base-resume-ta');
-  const counter = document.getElementById('resume-char-count');
-  if (ta && counter) counter.textContent = ta.value.length.toLocaleString() + ' characters';
+function triggerResumeUpload() {
+  document.getElementById('resume-file-input').click();
+}
+
+function onResumeFileChange(input) {
+  if (input.files && input.files[0]) handleResumeFile(input.files[0]);
+}
+
+function setupResumeDragDrop() {
+  const zone = document.getElementById('resume-upload-zone');
+  if (!zone) return;
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) handleResumeFile(file);
+  });
+  zone.addEventListener('click', triggerResumeUpload);
+}
+
+function toggleResumePreview() {
+  const box = document.getElementById('resume-preview-box');
+  const arrow = document.getElementById('resume-preview-arrow');
+  if (!box) return;
+  const hidden = box.style.display === 'none';
+  box.style.display = hidden ? 'block' : 'none';
+  if (arrow) arrow.textContent = hidden ? '▲' : '▼';
+}
+
+function clearBaseResume() {
+  if (!confirm('Remove the saved resume? This cannot be undone.')) return;
+  const state = loadResumeState();
+  delete state.base; delete state.baseFile; delete state.baseSaved;
+  saveResumeState(state);
+  renderResumeSection();
 }
 
 function copyResumeResult() {
@@ -2311,39 +2438,88 @@ function renderResumeSection() {
   if (!body) return;
   const state = loadResumeState();
   const base = state.base || '';
-  const savedTime = state.baseSaved ? new Date(state.baseSaved).toLocaleDateString() + ' ' + new Date(state.baseSaved).toLocaleTimeString() : '';
-  const charCount = base.length.toLocaleString();
+  const fileInfo = state.baseFile || null;
+  const savedTime = state.baseSaved ? new Date(state.baseSaved).toLocaleString() : '';
+
+  const basePanel = fileInfo ? `
+    <!-- File already uploaded -->
+    <div class="resume-panel">
+      <div class="resume-panel-header">
+        <h3>📋 Base Resume <span class="rph-badge">Saved</span></h3>
+        <span style="font-size:11px;color:var(--muted)">Uploaded ${savedTime}</span>
+      </div>
+      <div style="padding:16px 20px">
+        <div class="resume-file-info">
+          <span class="rfi-icon">${fileInfo.type === 'PDF' ? '📕' : fileInfo.type === 'DOCX' ? '📘' : '📄'}</span>
+          <div>
+            <div class="rfi-name">${escapeHtml(fileInfo.name)}</div>
+            <div class="rfi-meta">${fileInfo.type} · ${(fileInfo.size/1024).toFixed(1)} KB · ${base.length.toLocaleString()} characters extracted</div>
+          </div>
+          <button class="rfi-change" onclick="clearBaseResume()">✕ Remove</button>
+        </div>
+        <div id="resume-parse-status" class="resume-parse-status"></div>
+        <div class="resume-preview-toggle" onclick="toggleResumePreview()">
+          <span id="resume-preview-arrow">▼</span> Preview extracted text
+        </div>
+        <div id="resume-preview-box" class="resume-preview-box" style="display:none">${escapeHtml(base.slice(0,2000))}${base.length > 2000 ? '\n\n… (' + (base.length-2000).toLocaleString() + ' more characters)' : ''}</div>
+        <div style="margin-top:8px">
+          <input type="file" id="resume-file-input" accept=".pdf,.docx,.txt" style="display:none" onchange="onResumeFileChange(this)">
+          <button onclick="triggerResumeUpload()" style="padding:6px 16px;border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;background:var(--bg);color:var(--muted)">↑ Replace with a different file</button>
+        </div>
+      </div>
+    </div>` : `
+    <!-- Upload zone -->
+    <div class="resume-panel">
+      <div class="resume-panel-header">
+        <h3>📋 Base Resume <span class="rph-badge" style="background:#fee2e2;color:#dc2626">Not saved</span></h3>
+      </div>
+      <div style="padding:16px 20px">
+        <input type="file" id="resume-file-input" accept=".pdf,.docx,.txt" style="display:none" onchange="onResumeFileChange(this)">
+        <div class="resume-upload-zone" id="resume-upload-zone">
+          <span class="uz-icon">📤</span>
+          <h4>Upload your resume</h4>
+          <p>Drag & drop here, or click to browse</p>
+          <div class="uz-formats">
+            <span class="uz-fmt">PDF</span>
+            <span class="uz-fmt">DOCX</span>
+            <span class="uz-fmt">TXT</span>
+          </div>
+          <button class="resume-upload-btn" onclick="event.stopPropagation();triggerResumeUpload()">Choose File</button>
+        </div>
+        <div id="resume-parse-status" class="resume-parse-status"></div>
+      </div>
+    </div>`;
+
+  const savedVersionsHtml = (state.results||[]).length > 0 ? `
+  <div class="resume-panel">
+    <div class="resume-panel-header"><h3>🗂 Saved Versions</h3></div>
+    <div style="padding:0">
+      ${(state.results||[]).map((r,i)=>`
+      <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">${escapeHtml(r.company||'Unnamed')} ${r.role ? '— ' + escapeHtml(r.role) : ''}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${r.date||''} · ${(r.text||'').length.toLocaleString()} characters</div>
+        </div>
+        <button onclick="viewSavedResume(${i})" style="padding:5px 14px;border:1px solid var(--border);border-radius:5px;font-size:12px;cursor:pointer;background:var(--bg)">View</button>
+        <button onclick="deleteSavedResume(${i})" style="padding:5px 14px;border:1px solid var(--border);border-radius:5px;font-size:12px;cursor:pointer;background:var(--bg);color:#dc2626">Delete</button>
+      </div>`).join('')}
+    </div>
+  </div>` : '';
 
   body.innerHTML = `
   <div class="resume-hero">
     <h2>📄 Resume Management</h2>
-    <p>Store your base resume once. Then use AI to tailor it for any job — highlighting what matters most and articulating your real experience in the best possible light. No fabrication, ever.</p>
+    <p>Upload your base resume once. Then use AI to tailor it for any job — highlighting what matters most and articulating your real experience in the best possible light. No fabrication, ever.</p>
     <div class="rh-tags">
       <span class="rh-tag">✓ Highlights relevant experience</span>
       <span class="rh-tag">✓ Stronger articulation</span>
       <span class="rh-tag">✓ JD-matched language</span>
-      <span class="rh-tag">✗ No false info</span>
+      <span class="rh-tag">✗ No false info added</span>
     </div>
   </div>
 
-  <!-- Base Resume -->
-  <div class="resume-panel">
-    <div class="resume-panel-header">
-      <h3>📋 Base Resume <span class="rph-badge">${base ? 'Saved' : 'Not saved'}</span></h3>
-      ${savedTime ? `<span style="font-size:11px;color:var(--muted)">Last saved: ${savedTime}</span>` : ''}
-    </div>
-    <textarea id="base-resume-ta" class="resume-base-area"
-      placeholder="Paste your full resume here. This is your master copy — all curations will be based on this.&#10;&#10;Include everything: work experience, education, skills, certifications, achievements, projects."
-      oninput="updateResumeCharCount()"
-    >${escapeHtml(base)}</textarea>
-    <div class="resume-panel-footer">
-      <button class="resume-save-btn" id="resume-save-btn" onclick="saveBaseResume()">Save Resume</button>
-      <span id="resume-save-status" style="font-size:11px;color:var(--muted)">${savedTime ? 'Last saved ' + savedTime : 'Unsaved'}</span>
-      <span class="resume-char-count" id="resume-char-count">${charCount} characters</span>
-    </div>
-  </div>
+  ${basePanel}
 
-  <!-- Curate for a Job -->
   <div class="resume-curate-panel">
     <div class="resume-curate-header">
       <h3>✨ Curate for a Specific Job</h3>
@@ -2366,12 +2542,11 @@ function renderResumeSection() {
       </div>
       <button class="resume-curate-btn" id="curate-resume-btn" onclick="curateResume()">✨ Curate Resume</button>
       <div class="resume-disclaimer">
-        ⚠️ <strong>Honesty policy:</strong> The AI will only reorder, reword, and emphasize content already in your base resume. It will never add skills, experiences, or achievements you don't have. Every change will be explained in the "Tailoring Notes" section at the bottom of the output.
+        ⚠️ <strong>Honesty policy:</strong> The AI will only reorder, reword, and emphasize content already in your base resume. It will never add skills, experiences, or achievements you don't have. Every change will be explained in the "Tailoring Notes" at the bottom of the output.
       </div>
     </div>
   </div>
 
-  <!-- Result Panel -->
   <div class="resume-result-panel" id="resume-result-panel">
     <div class="resume-result-header">
       <h3>✅ Curated Resume</h3>
@@ -2386,25 +2561,9 @@ function renderResumeSection() {
     <div id="resume-result-body" class="resume-result-body" style="display:none"></div>
   </div>
 
-  <!-- Saved Versions -->
-  ${(state.results||[]).length > 0 ? `
-  <div class="resume-panel">
-    <div class="resume-panel-header">
-      <h3>🗂 Saved Versions</h3>
-    </div>
-    <div style="padding:0">
-      ${(state.results||[]).map((r,i)=>`
-      <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;">
-        <div style="flex:1">
-          <div style="font-size:13px;font-weight:700;color:var(--text)">${escapeHtml(r.company||'Unnamed')} ${r.role ? '— ' + escapeHtml(r.role) : ''}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">${r.date || ''} · ${(r.text||'').length.toLocaleString()} characters</div>
-        </div>
-        <button onclick="viewSavedResume(${i})" style="padding:5px 14px;border:1px solid var(--border);border-radius:5px;font-size:12px;cursor:pointer;background:var(--bg)">View</button>
-        <button onclick="deleteSavedResume(${i})" style="padding:5px 14px;border:1px solid var(--border);border-radius:5px;font-size:12px;cursor:pointer;background:var(--bg);color:#dc2626">Delete</button>
-      </div>`).join('')}
-    </div>
-  </div>` : ''}
-  `;
+  ${savedVersionsHtml}`;
+
+  setTimeout(setupResumeDragDrop, 0);
 }
 
 function viewSavedResume(idx) {
@@ -2808,5 +2967,15 @@ buildContent();
 updateProgress();
 showSection('intro');
 </script>
+
+<!-- PDF.js for PDF parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+if (typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+</script>
+<!-- Mammoth.js for DOCX parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 </body>
 </html>
