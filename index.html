@@ -1366,25 +1366,60 @@
     cursor: pointer; transition: background 0.15s;
   }
   .resume-upload-btn:hover { background: #4338ca; }
-  .resume-file-info {
-    display: flex; align-items: center; gap: 14px;
-    padding: 16px 20px; background: #f0fdf4;
-    border: 1px solid #86efac; border-radius: 10px; margin: 16px 0;
+  /* File saved card */
+  .rfi-card {
+    display: flex; align-items: center; gap: 16px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
   }
-  .resume-file-info .rfi-icon { font-size: 28px; }
-  .resume-file-info .rfi-name { font-size: 14px; font-weight: 700; color: var(--text); }
-  .resume-file-info .rfi-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .resume-file-info .rfi-change {
-    margin-left: auto; padding: 6px 14px; border: 1px solid var(--border);
-    border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;
-    background: var(--card-bg); color: var(--text); transition: all 0.15s;
+  .rfi-type-badge {
+    width: 44px; height: 52px; border-radius: 8px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800; letter-spacing: 0.5px;
+    flex-shrink: 0; gap: 2px;
   }
-  .resume-file-info .rfi-change:hover { background: var(--bg); }
+  .rfi-type-badge.pdf  { background: #fee2e2; color: #b91c1c; }
+  .rfi-type-badge.docx { background: #dbeafe; color: #1d4ed8; }
+  .rfi-type-badge.txt  { background: #f3f4f6; color: #374151; }
+  .rfi-type-badge .rfi-badge-icon { font-size: 20px; line-height: 1; }
+  .rfi-info { flex: 1; min-width: 0; }
+  .rfi-filename {
+    font-size: 14px; font-weight: 700; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .rfi-stats {
+    display: flex; gap: 10px; margin-top: 4px; flex-wrap: wrap;
+  }
+  .rfi-stat {
+    font-size: 11.5px; color: var(--muted);
+    display: flex; align-items: center; gap: 4px;
+  }
+  .rfi-stat::before { content: ''; }
+  .rfi-stat + .rfi-stat::before {
+    content: '·'; margin-right: 6px; color: #d1d5db;
+  }
+  .rfi-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .rfi-btn {
+    padding: 6px 14px; border-radius: 7px; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; border: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .rfi-btn.replace { background: var(--bg); color: var(--text); }
+  .rfi-btn.replace:hover { background: #f3f4f6; border-color: #d1d5db; }
+  .rfi-btn.remove  { background: #fff; color: #dc2626; border-color: #fca5a5; }
+  .rfi-btn.remove:hover  { background: #fef2f2; }
+
   .resume-preview-toggle {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 12px; font-weight: 600; color: var(--accent);
-    cursor: pointer; user-select: none; margin: 8px 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 20px; cursor: pointer; user-select: none;
+    border-top: 1px solid var(--border);
+    transition: background 0.12s;
   }
+  .resume-preview-toggle:hover { background: #fafafa; }
+  .rpt-left { display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 600; color: var(--text); }
+  .rpt-left svg { color: var(--accent); }
+  .rpt-chevron { font-size: 11px; color: var(--muted); transition: transform 0.2s; }
+  .rpt-chevron.open { transform: rotate(180deg); }
   .resume-preview-box {
     border-radius: 8px; overflow: hidden;
     border: 1px solid var(--border);
@@ -2374,11 +2409,11 @@ function setupResumeDragDrop() {
 
 function toggleResumePreview() {
   const box = document.getElementById('resume-preview-box');
-  const arrow = document.getElementById('resume-preview-arrow');
+  const chevron = document.getElementById('resume-preview-arrow');
   if (!box) return;
   const hidden = box.style.display === 'none';
   box.style.display = hidden ? 'block' : 'none';
-  if (arrow) arrow.textContent = hidden ? '▲' : '▼';
+  if (chevron) chevron.classList.toggle('open', hidden);
   // Lazy-load rich preview on first open
   if (hidden && !box.dataset.loaded) {
     box.dataset.loaded = '1';
@@ -2643,32 +2678,42 @@ function renderResumeSection() {
   const fileInfo = state.baseFile || null;
   const savedTime = state.baseSaved ? new Date(state.baseSaved).toLocaleString() : '';
 
+  const typeKey = (fileInfo ? fileInfo.type : 'TXT').toLowerCase();
+  const badgeIcon = typeKey === 'pdf' ? '📄' : typeKey === 'docx' ? '📝' : '📃';
+
   const basePanel = fileInfo ? `
-    <!-- File already uploaded -->
     <div class="resume-panel">
       <div class="resume-panel-header">
         <h3>📋 Base Resume <span class="rph-badge">Saved</span></h3>
         <span style="font-size:11px;color:var(--muted)">Uploaded ${savedTime}</span>
       </div>
-      <div style="padding:16px 20px">
-        <div class="resume-file-info">
-          <span class="rfi-icon">${fileInfo.type === 'PDF' ? '📕' : fileInfo.type === 'DOCX' ? '📘' : '📄'}</span>
-          <div>
-            <div class="rfi-name">${escapeHtml(fileInfo.name)}</div>
-            <div class="rfi-meta">${fileInfo.type} · ${(fileInfo.size/1024).toFixed(1)} KB · ${base.length.toLocaleString()} characters extracted</div>
+      <input type="file" id="resume-file-input" accept=".pdf,.docx,.txt" style="display:none" onchange="onResumeFileChange(this)">
+      <div class="rfi-card">
+        <div class="rfi-type-badge ${typeKey}">
+          <span class="rfi-badge-icon">${badgeIcon}</span>
+          ${escapeHtml(fileInfo.type)}
+        </div>
+        <div class="rfi-info">
+          <div class="rfi-filename">${escapeHtml(fileInfo.name)}</div>
+          <div class="rfi-stats">
+            <span class="rfi-stat">${(fileInfo.size/1024).toFixed(1)} KB</span>
+            <span class="rfi-stat">${base.length.toLocaleString()} chars extracted</span>
           </div>
-          <button class="rfi-change" onclick="clearBaseResume()">✕ Remove</button>
         </div>
-        <div id="resume-parse-status" class="resume-parse-status"></div>
-        <div class="resume-preview-toggle" onclick="toggleResumePreview()">
-          <span id="resume-preview-arrow">▼</span> Preview document
-        </div>
-        <div id="resume-preview-box" class="resume-preview-box" style="display:none;padding:0;background:transparent;border:none"></div>
-        <div style="margin-top:8px">
-          <input type="file" id="resume-file-input" accept=".pdf,.docx,.txt" style="display:none" onchange="onResumeFileChange(this)">
-          <button onclick="triggerResumeUpload()" style="padding:6px 16px;border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;background:var(--bg);color:var(--muted)">↑ Replace with a different file</button>
+        <div class="rfi-actions">
+          <button class="rfi-btn replace" onclick="triggerResumeUpload()">↑ Replace</button>
+          <button class="rfi-btn remove" onclick="clearBaseResume()">Remove</button>
         </div>
       </div>
+      <div id="resume-parse-status" class="resume-parse-status" style="padding:0 20px"></div>
+      <div class="resume-preview-toggle" onclick="toggleResumePreview()">
+        <span class="rpt-left">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Preview document
+        </span>
+        <span class="rpt-chevron" id="resume-preview-arrow">▼</span>
+      </div>
+      <div id="resume-preview-box" class="resume-preview-box" style="display:none;border:none;border-radius:0;border-top:1px solid var(--border)"></div>
     </div>` : `
     <!-- Upload zone -->
     <div class="resume-panel">
