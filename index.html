@@ -103,29 +103,73 @@
   }
 
   #sidebar-footer {
-    padding: 16px 20px;
+    padding: 10px 20px;
     border-top: 1px solid #2d2d4e;
   }
-
-  .btn-export {
-    width: 100%;
-    padding: 10px;
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .btn-export:hover { background: #4338ca; }
 
   .save-indicator {
     text-align: center;
     font-size: 11px;
     color: #555875;
-    margin-top: 8px;
+  }
+
+  /* ── Hamburger menu ── */
+  #hamburger-btn {
+    position: fixed;
+    top: 14px;
+    right: 18px;
+    z-index: 1000;
+    width: 38px; height: 38px;
+    border-radius: 9px;
+    background: #fff;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+    cursor: pointer;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 5px;
+    transition: box-shadow 0.15s;
+  }
+  #hamburger-btn:hover { box-shadow: 0 3px 14px rgba(0,0,0,0.16); }
+  #hamburger-btn span {
+    display: block; width: 17px; height: 2px;
+    background: #374151; border-radius: 2px;
+    transition: transform 0.2s, opacity 0.2s;
+  }
+  #hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  #hamburger-btn.open span:nth-child(2) { opacity: 0; }
+  #hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  #hamburger-menu {
+    position: fixed;
+    top: 60px; right: 18px;
+    z-index: 999;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.13);
+    min-width: 210px;
+    overflow: hidden;
+    display: none;
+  }
+  #hamburger-menu.open { display: block; }
+  .hm-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 18px;
+    font-size: 13.5px; font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.12s;
+    border: none; background: none; width: 100%; text-align: left;
+  }
+  .hm-item:hover { background: #f3f4f6; }
+  .hm-item + .hm-item { border-top: 1px solid var(--border); }
+  .hm-icon { font-size: 15px; }
+  .hm-divider {
+    padding: 8px 18px 10px;
+    font-size: 11px; color: var(--muted);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 6px;
   }
 
   /* ── Main ── */
@@ -1134,14 +1178,6 @@
   .key-status.set { color: #059669; }
   .key-status.unset { color: #dc2626; }
 
-  .btn-settings {
-    width: 100%; padding: 8px 10px; margin-top: 8px;
-    background: transparent; color: #7c7fa8;
-    border: 1px solid #2d2d4e; border-radius: 6px;
-    font-size: 12px; cursor: pointer; text-align: left;
-    transition: all 0.15s;
-  }
-  .btn-settings:hover { background: #2d2d4e; color: #fff; }
 
   /* Section 12 company template */
   .company-template {
@@ -1397,10 +1433,22 @@
   </div>
   <nav id="nav"></nav>
   <div id="sidebar-footer">
-    <button class="btn-export" onclick="window.print()">&#128438; Print / Save as PDF</button>
-    <button class="btn-settings" onclick="openSettings()">&#9881; API Key Settings</button>
     <div class="save-indicator" id="save-indicator">All changes auto-saved</div>
   </div>
+</div>
+
+<!-- Hamburger Menu -->
+<button id="hamburger-btn" onclick="toggleHamburger()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div id="hamburger-menu">
+  <button class="hm-item" onclick="window.print();toggleHamburger()">
+    <span class="hm-icon">🖨️</span> Print / Save as PDF
+  </button>
+  <button class="hm-item" onclick="openSettings();toggleHamburger()">
+    <span class="hm-icon">⚙️</span> API Key Settings
+  </button>
+  <div class="hm-divider">✓ All changes auto-saved</div>
 </div>
 
 <!-- Settings Modal -->
@@ -2684,6 +2732,23 @@ function saveCuratedState(state) {
 }
 
 function getApiKey() { return localStorage.getItem('pm_api_key') || ''; }
+
+function toggleHamburger() {
+  const btn = document.getElementById('hamburger-btn');
+  const menu = document.getElementById('hamburger-menu');
+  const isOpen = menu.classList.contains('open');
+  btn.classList.toggle('open', !isOpen);
+  menu.classList.toggle('open', !isOpen);
+}
+// Close hamburger when clicking outside
+document.addEventListener('click', function(e) {
+  const btn = document.getElementById('hamburger-btn');
+  const menu = document.getElementById('hamburger-menu');
+  if (menu && btn && !btn.contains(e.target) && !menu.contains(e.target)) {
+    btn.classList.remove('open');
+    menu.classList.remove('open');
+  }
+});
 
 function openSettings() {
   const modal = document.getElementById('settings-modal');
