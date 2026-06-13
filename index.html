@@ -173,6 +173,26 @@
     color: #374151;
   }
 
+  /* ── Additional Practice Questions divider ── */
+  .additional-qs-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 36px 0 20px;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, var(--accent) 0%, #6366f1 100%);
+    border-radius: 10px;
+    gap: 12px;
+  }
+  .additional-qs-label {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 15px; font-weight: 800; color: #fff; letter-spacing: 0.01em;
+  }
+  .additional-qs-icon { font-size: 20px; }
+  .additional-qs-note {
+    font-size: 12px; color: rgba(255,255,255,0.7); font-style: italic;
+    white-space: nowrap;
+  }
+  @media (max-width: 700px) { .additional-qs-note { display: none; } }
+
   /* ── Framework Doc Renderer ── */
   .framework-doc {
     margin-top: 20px;
@@ -1382,22 +1402,22 @@ function renderLeadershipDoc(sec) {
   <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Use these every day — ensure 80% of principles are covered across your answer set.</p>`;
 
   const lps = [
-    ["Customer Obsession","Leaders start with the customer and work backwards. They work vigorously to earn and keep customer trust."],
-    ["Ownership","Leaders are owners. They think long term and don't sacrifice long-term value for short-term results. They never say "that's not my job.""],
-    ["Invent and Simplify","Leaders expect and require innovation from their teams and always find ways to simplify. They are not limited by "not invented here.""],
-    ["Are Right, A Lot","Leaders are right a lot. They have strong judgment and good instincts. They seek diverse perspectives and work to disconfirm their beliefs."],
-    ["Learn and Be Curious","Leaders are never done learning and always seek to improve themselves. They are curious about new possibilities and act to explore them."],
-    ["Hire and Develop the Best","Leaders raise the performance bar with every hire and promotion. Leaders develop leaders and take seriously their role in coaching others."],
-    ["Insist on the Highest Standards","Leaders have relentlessly high standards. Leaders are continually raising the bar and drive their teams to deliver high quality products and processes."],
-    ["Think Big","Thinking small is a self-fulfilling prophecy. Leaders create and communicate a bold direction that inspires results. They think differently."],
-    ["Bias for Action","Speed matters in business. Many decisions and actions are reversible and do not need extensive study. We value calculated risk taking."],
-    ["Frugality","Accomplish more with less. Constraints breed resourcefulness, self-sufficiency, and invention."],
-    ["Earn Trust","Leaders listen attentively, speak candidly, and treat others respectfully. They are vocally self-critical, even when it's uncomfortable."],
-    ["Dive Deep","Leaders operate at all levels, stay connected to the details, audit frequently, and are skeptical when metrics and anecdotes differ."],
-    ["Have Backbone; Disagree and Commit","Leaders are obligated to respectfully challenge decisions when they disagree. Once a decision is determined, they commit wholly."],
-    ["Deliver Results","Leaders focus on the key inputs for their business and deliver them with the right quality and in a timely fashion. They rise to the occasion."],
-    ["Strive to be Earth's Best Employer","Leaders create a safer, more productive, more diverse, and more just work environment. They lead with empathy and have fun at work."],
-    ["Success and Scale Bring Broad Responsibility","We are big, we impact the world, and we are far from perfect. We must begin each day with a determination to make better, do better, and be better."],
+    ['Customer Obsession','Leaders start with the customer and work backwards. They work vigorously to earn and keep customer trust.'],
+    ['Ownership','Leaders are owners. They think long term and don\'t sacrifice long-term value for short-term results. They never say "that\'s not my job."'],
+    ['Invent and Simplify','Leaders expect and require innovation from their teams and always find ways to simplify. They are not limited by "not invented here."'],
+    ['Are Right, A Lot','Leaders are right a lot. They have strong judgment and good instincts. They seek diverse perspectives and work to disconfirm their beliefs.'],
+    ['Learn and Be Curious','Leaders are never done learning and always seek to improve themselves. They are curious about new possibilities and act to explore them.'],
+    ['Hire and Develop the Best','Leaders raise the performance bar with every hire and promotion. Leaders develop leaders and take seriously their role in coaching others.'],
+    ['Insist on the Highest Standards','Leaders have relentlessly high standards. Leaders are continually raising the bar and drive their teams to deliver high quality products and processes.'],
+    ['Think Big','Thinking small is a self-fulfilling prophecy. Leaders create and communicate a bold direction that inspires results. They think differently.'],
+    ['Bias for Action','Speed matters in business. Many decisions and actions are reversible and do not need extensive study. We value calculated risk taking.'],
+    ['Frugality','Accomplish more with less. Constraints breed resourcefulness, self-sufficiency, and invention.'],
+    ['Earn Trust','Leaders listen attentively, speak candidly, and treat others respectfully. They are vocally self-critical, even when doing so is uncomfortable.'],
+    ['Dive Deep','Leaders operate at all levels, stay connected to the details, audit frequently, and are skeptical when metrics and anecdotes differ.'],
+    ['Have Backbone; Disagree and Commit','Leaders are obligated to respectfully challenge decisions when they disagree. Once a decision is determined, they commit wholly.'],
+    ['Deliver Results','Leaders focus on the key inputs for their business and deliver them with the right quality and in a timely fashion. They rise to the occasion.'],
+    ['Strive to be Earth\'s Best Employer','Leaders create a safer, more productive, more diverse, and more just work environment. They lead with empathy and have fun at work.'],
+    ['Success and Scale Bring Broad Responsibility','We are big, we impact the world, and we are far from perfect. We must begin each day with a determination to make better, do better, and be better.'],
   ];
   body += `<div style="background:var(--card-bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;">`;
   lps.forEach((lp, i) => {
@@ -1603,17 +1623,20 @@ function renderAnswerHtml(text) {
 }
 
 function switchToEdit(qid, originalAnswer) {
+  // originalAnswer may come from getOriginal() or direct call — always register it
+  if (originalAnswer !== undefined) _origAnswers[qid] = originalAnswer;
+  const orig = getOriginal(qid);
   const wrap = document.getElementById('rendered-wrap-' + qid);
   if (!wrap) return;
   const state = loadState();
-  const currentVal = state[qid] !== undefined ? state[qid] : originalAnswer;
+  const currentVal = state[qid] !== undefined ? state[qid] : orig;
   const lines = currentVal.split('\n').length;
   const height = Math.max(260, lines * 24 + 40);
   wrap.innerHTML = `<textarea
-    class="answer-textarea${currentVal !== originalAnswer ? ' modified' : ''}"
+    class="answer-textarea${currentVal !== orig ? ' modified' : ''}"
     id="ta-${qid}"
-    oninput="onAnswerChange('${qid}', ${JSON.stringify(originalAnswer)}, this)"
-    onblur="switchToView('${qid}', ${JSON.stringify(originalAnswer)})"
+    oninput="onAnswerChange('${qid}', getOriginal('${qid}'), this)"
+    onblur="switchToView('${qid}', getOriginal('${qid}'))"
     spellcheck="true"
     style="min-height:${height}px"
   >${currentVal.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>`;
@@ -1629,7 +1652,7 @@ function switchToView(qid, originalAnswer) {
   const state = loadState();
   const currentVal = state[qid] !== undefined ? state[qid] : originalAnswer;
   const isModified = currentVal !== originalAnswer;
-  wrap.innerHTML = `<div class="answer-rendered" onclick="switchToEdit('${qid}', ${JSON.stringify(originalAnswer)})" title="Click to edit">${renderAnswerHtml(currentVal)}</div>
+  wrap.innerHTML = `<div class="answer-rendered" onclick="switchToEdit('${qid}', getOriginal('${qid}'))" title="Click to edit">${renderAnswerHtml(currentVal)}</div>
     <div class="edit-hint">Click to edit</div>`;
   // Update modified dot
   const dot = document.getElementById('modified-dot-' + qid);
@@ -1639,11 +1662,12 @@ function switchToView(qid, originalAnswer) {
 }
 
 function onAnswerChange(qid, originalAnswer, textarea) {
+  const orig = originalAnswer || getOriginal(qid);
   const state = loadState();
   const val = textarea.value;
   state[qid] = val;
   saveState(state);
-  const isModified = val !== originalAnswer;
+  const isModified = val !== orig;
   textarea.classList.toggle('modified', isModified);
   const resetBtn = document.getElementById('reset-' + qid);
   if (resetBtn) resetBtn.style.display = isModified ? 'inline-block' : 'none';
@@ -1651,14 +1675,20 @@ function onAnswerChange(qid, originalAnswer, textarea) {
 }
 
 function resetAnswer(qid, originalAnswer) {
+  const orig = originalAnswer || getOriginal(qid);
   const state = loadState();
   delete state[qid];
   saveState(state);
-  switchToView(qid, originalAnswer);
+  switchToView(qid, orig);
   updateProgress();
 }
 
+// Store original answers by id for safe retrieval (avoids inline JSON in onclick attrs)
+const _origAnswers = {};
+function getOriginal(qid) { return _origAnswers[qid] || ''; }
+
 function renderQuestionCard(q) {
+  _origAnswers[q.id] = q.answer; // register for safe retrieval
   const state = loadState();
   const currentAnswer = state[q.id] !== undefined ? state[q.id] : q.answer;
   const isModified = currentAnswer !== q.answer;
@@ -1677,12 +1707,12 @@ function renderQuestionCard(q) {
         Your Answer <span class="modified-dot" id="modified-dot-${q.id}" style="display:${isModified?'inline-block':'none'}"></span>
         <div class="answer-actions">
           <button class="btn-sm" id="reset-${q.id}" style="display:${isModified?'inline-block':'none'}"
-            onclick="resetAnswer('${q.id}', ${JSON.stringify(q.answer)})">&#8635; Reset to original</button>
-          <button class="btn-sm" onclick="switchToEdit('${q.id}', ${JSON.stringify(q.answer)})">&#9998; Edit</button>
+            onclick="resetAnswer('${q.id}', getOriginal('${q.id}'))">&#8635; Reset to original</button>
+          <button class="btn-sm" onclick="switchToEdit('${q.id}', getOriginal('${q.id}'))">&#9998; Edit</button>
         </div>
       </div>
       <div id="rendered-wrap-${q.id}">
-        <div class="answer-rendered" onclick="switchToEdit('${q.id}', ${JSON.stringify(q.answer)})" title="Click to edit">${renderAnswerHtml(currentAnswer)}</div>
+        <div class="answer-rendered" onclick="switchToEdit('${q.id}', getOriginal('${q.id}'))" title="Click to edit">${renderAnswerHtml(currentAnswer)}</div>
         <div class="edit-hint">Click to edit</div>
       </div>
     </div>
@@ -1942,6 +1972,16 @@ function buildContent() {
 
     // Questions
     if (sec.questions && sec.questions.length > 0) {
+      const docSectionIds = ['section_2_behavioral_leadership_questions','section_3_product_sense_design_questions','section_4_product_strategy_questions','section_5_execution_metrics_questions'];
+      if (docSectionIds.includes(sec.id)) {
+        html += `<div class="additional-qs-header">
+          <div class="additional-qs-label">
+            <span class="additional-qs-icon">📝</span>
+            <span>Additional Practice Questions</span>
+          </div>
+          <span class="additional-qs-note">Pre-written answers from the guide — click any card to edit</span>
+        </div>`;
+      }
       sec.questions.forEach(q => { html += renderQuestionCard(q); });
     } else {
       // Special handling for specific sections
