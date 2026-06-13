@@ -1386,12 +1386,10 @@
     cursor: pointer; user-select: none; margin: 8px 0;
   }
   .resume-preview-box {
-    max-height: 320px; overflow-y: auto;
-    background: var(--bg); border: 1px solid var(--border);
-    border-radius: 8px; padding: 16px 18px;
-    font-size: 12.5px; line-height: 1.65; color: #374151;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    border-radius: 8px; overflow: hidden;
+    border: 1px solid var(--border);
     margin-bottom: 14px;
+    background: var(--bg);
   }
   .rpv-name {
     font-size: 15px; font-weight: 800; color: var(--text);
@@ -2287,6 +2285,12 @@ function loadResumeState() {
 function saveResumeState(state) {
   localStorage.setItem('pm_resume', JSON.stringify(state));
 }
+function saveResumeFileData(b64, ext) {
+  try { localStorage.setItem('pm_resume_file', JSON.stringify({ b64, ext })); } catch(e) {}
+}
+function loadResumeFileData() {
+  try { return JSON.parse(localStorage.getItem('pm_resume_file') || 'null'); } catch(e) { return null; }
+}
 
 async function handleResumeFile(file) {
   if (!file) return;
@@ -2301,12 +2305,13 @@ async function handleResumeFile(file) {
 
   try {
     let text = '';
+    const arrayBuffer = await file.arrayBuffer();
+
     if (ext === 'txt') {
       text = await file.text();
     } else if (ext === 'pdf') {
       if (typeof pdfjsLib === 'undefined') throw new Error('PDF library not loaded yet — please try again in a second.');
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer.slice(0) }).promise;
       const pages = [];
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
@@ -2316,8 +2321,7 @@ async function handleResumeFile(file) {
       text = pages.join('\n\n');
     } else if (ext === 'docx') {
       if (typeof mammoth === 'undefined') throw new Error('DOCX library not loaded yet — please try again in a second.');
-      const arrayBuffer = await file.arrayBuffer();
-      const result = await mammoth.extractRawText({ arrayBuffer });
+      const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer.slice(0) });
       text = result.value;
     } else {
       throw new Error('Unsupported file type. Please upload a PDF, DOCX, or TXT file.');
@@ -2325,7 +2329,15 @@ async function handleResumeFile(file) {
 
     if (!text.trim()) throw new Error('Could not extract text from this file. Please try a different format.');
 
-    // Save to state
+    // Store file as base64 for rich preview persistence
+    const b64 = await new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result.split(',')[1]);
+      reader.readAsDataURL(file);
+    });
+    saveResumeFileData(b64, ext);
+
+    // Save text + metadata
     const state = loadResumeState();
     state.base = text;
     state.baseFile = { name: file.name, size: file.size, type: ext.toUpperCase(), saved: Date.now() };
@@ -2367,6 +2379,61 @@ function toggleResumePreview() {
   const hidden = box.style.display === 'none';
   box.style.display = hidden ? 'block' : 'none';
   if (arrow) arrow.textContent = hidden ? '▲' : '▼';
+  // Lazy-load rich preview on first open
+  if (hidden && !box.dataset.loaded) {
+    box.dataset.loaded = '1';
+    loadRichPreview(box);
+  }
+}
+
+async function loadRichPreview(container) {
+  const fileData = loadResumeFileData();
+  const state = loadResumeState();
+  const ext = fileData ? fileData.ext : (state.baseFile ? state.baseFile.type.toLowerCase() : 'txt');
+
+  if (!fileData && !state.base) {
+    container.textContent = 'No preview available.';
+    return;
+  }
+
+  container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Loading preview…</div>';
+
+  try {
+    if (ext === 'pdf' && fileData) {
+      // Native PDF viewer via blob URL
+      const bytes = Uint8Array.from(atob(fileData.b64), c => c.charCodeAt(0));
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      container.innerHTML = `<iframe src="${url}#toolbar=1&navpanes=0" style="width:100%;height:520px;border:none;border-radius:6px" title="Resume PDF"></iframe>`;
+    } else if (ext === 'docx' && fileData) {
+      // Mammoth rich HTML render
+      if (typeof mammoth === 'undefined') throw new Error('DOCX library not ready');
+      const bytes = Uint8Array.from(atob(fileData.b64), c => c.charCodeAt(0)).buffer;
+      const result = await mammoth.convertToHtml({ arrayBuffer: bytes });
+      const docHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;
+          line-height:1.7;color:#1f2937;padding:20px 28px;margin:0}
+        h1,h2,h3{color:#111827;margin:1em 0 0.4em}
+        h1{font-size:18px} h2{font-size:15px} h3{font-size:13.5px}
+        p{margin:0.3em 0} ul,ol{padding-left:22px;margin:0.4em 0}
+        strong{font-weight:700} em{font-style:italic}
+        table{border-collapse:collapse;width:100%;margin:10px 0}
+        td,th{border:1px solid #e5e7eb;padding:6px 10px;font-size:12.5px}
+        th{background:#f9fafb;font-weight:600}
+      </style></head><body>${result.value}</body></html>`;
+      container.innerHTML = `<iframe srcdoc="${docHtml.replace(/"/g, '&quot;')}" style="width:100%;height:520px;border:none;border-radius:6px" title="Resume DOCX" sandbox="allow-same-origin"></iframe>`;
+    } else {
+      // TXT or fallback — pre-formatted with line wrapping
+      const text = state.base || '';
+      container.style.whiteSpace = 'pre-wrap';
+      container.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      container.style.fontSize = '12.5px';
+      container.style.lineHeight = '1.7';
+      container.textContent = text;
+    }
+  } catch(err) {
+    container.innerHTML = `<div style="padding:16px;color:#dc2626;font-size:13px">Preview error: ${escapeHtml(err.message)}</div>`;
+  }
 }
 
 function clearBaseResume() {
@@ -2374,6 +2441,7 @@ function clearBaseResume() {
   const state = loadResumeState();
   delete state.base; delete state.baseFile; delete state.baseSaved;
   saveResumeState(state);
+  try { localStorage.removeItem('pm_resume_file'); } catch(e) {}
   renderResumeSection();
 }
 
@@ -2593,9 +2661,9 @@ function renderResumeSection() {
         </div>
         <div id="resume-parse-status" class="resume-parse-status"></div>
         <div class="resume-preview-toggle" onclick="toggleResumePreview()">
-          <span id="resume-preview-arrow">▼</span> Preview extracted text
+          <span id="resume-preview-arrow">▼</span> Preview document
         </div>
-        <div id="resume-preview-box" class="resume-preview-box" style="display:none">${formatResumePreview(base)}</div>
+        <div id="resume-preview-box" class="resume-preview-box" style="display:none;padding:0;background:transparent;border:none"></div>
         <div style="margin-top:8px">
           <input type="file" id="resume-file-input" accept=".pdf,.docx,.txt" style="display:none" onchange="onResumeFileChange(this)">
           <button onclick="triggerResumeUpload()" style="padding:6px 16px;border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;background:var(--bg);color:var(--muted)">↑ Replace with a different file</button>
