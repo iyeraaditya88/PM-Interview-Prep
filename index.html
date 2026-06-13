@@ -1981,6 +1981,105 @@
   .q-card:hover, .doc-q-card:hover, .dream-card:hover, .curated-card:hover {
     transform: translateY(-1px);
   }
+
+  /* ════════════════════════════════════════════════════════════════
+     READABILITY PATCH — lift contrast on body text in dark mode.
+     Targets hardcoded grays #374151 / #4b5563 / cream callouts /
+     light tinted backgrounds that were hard to read on dark surface.
+     ════════════════════════════════════════════════════════════════ */
+  :root[data-theme="dark"] .fdoc-lead {
+    background: rgba(251,191,36,0.10) !important;
+    color: #fde68a !important;
+    border-left-color: var(--warn) !important;
+  }
+  :root[data-theme="dark"] .fdoc-lead strong { color: #fcd34d !important; }
+  :root[data-theme="dark"] .fdoc-step-body,
+  :root[data-theme="dark"] .fdoc-example,
+  :root[data-theme="dark"] .fdoc-bullet-list li,
+  :root[data-theme="dark"] .fdoc-lp-desc,
+  :root[data-theme="dark"] .fdoc-analytics-table td,
+  :root[data-theme="dark"] .fdoc-seg-table td {
+    color: var(--text) !important;
+  }
+  :root[data-theme="dark"] .fdoc-example {
+    background: var(--bg-soft) !important; color: var(--text) !important;
+  }
+  :root[data-theme="dark"] .fdoc-step-label,
+  :root[data-theme="dark"] .fdoc-lp-name,
+  :root[data-theme="dark"] .fdoc-q-text { color: var(--text-strong) !important; }
+  :root[data-theme="dark"] .fdoc-q-hint { color: var(--muted) !important; }
+  :root[data-theme="dark"] .fdoc-step-time {
+    background: var(--bg-soft) !important; color: var(--muted) !important;
+  }
+  :root[data-theme="dark"] .fdoc-q-num,
+  :root[data-theme="dark"] .fdoc-value-chip {
+    background: var(--accent-light) !important; color: var(--accent) !important;
+  }
+  :root[data-theme="dark"] .fdoc-value-chip .vc-desc { color: var(--accent-2) !important; }
+  :root[data-theme="dark"] .fdoc-analytics-table th,
+  :root[data-theme="dark"] .fdoc-seg-table th {
+    background: var(--bg-soft) !important; color: var(--accent) !important;
+    border-bottom-color: var(--border) !important;
+  }
+  :root[data-theme="dark"] .fdoc-analytics-table,
+  :root[data-theme="dark"] .fdoc-seg-table { border-color: var(--border) !important; }
+  :root[data-theme="dark"] .fdoc-analytics-table td,
+  :root[data-theme="dark"] .fdoc-seg-table td { border-bottom-color: var(--border) !important; }
+  :root[data-theme="dark"] .fdoc-seg-table .seg-pick {
+    background: rgba(52,211,153,0.14) !important; color: #6ee7b7 !important;
+  }
+  :root[data-theme="dark"] .fdoc-question-item { border-bottom-color: var(--border) !important; }
+  :root[data-theme="dark"] .fdoc-lp-item { border-bottom-color: var(--border) !important; }
+  :root[data-theme="dark"] .fdoc-template-chip {
+    background: var(--bg-soft) !important; color: var(--accent-2) !important;
+  }
+  :root[data-theme="dark"] .fdoc-section-title {
+    color: var(--accent-2) !important;
+    border-bottom-color: rgba(129,140,248,0.25) !important;
+  }
+  :root[data-theme="dark"] .framework-doc-header {
+    background: linear-gradient(135deg, #1a2240 0%, #131a2e 100%) !important;
+    border-bottom: 1px solid var(--border);
+  }
+  :root[data-theme="dark"] .framework-doc-header .fdoc-subtitle { color: var(--accent-2) !important; }
+
+  /* Doc Q-bank cards */
+  :root[data-theme="dark"] .doc-qbank-header p { color: #6ee7b7 !important; }
+  :root[data-theme="dark"] .doc-q-question { color: var(--text-strong) !important; }
+  :root[data-theme="dark"] .doc-q-hint { color: var(--muted) !important; }
+  :root[data-theme="dark"] .doc-q-answer-area { color: var(--text) !important; }
+  :root[data-theme="dark"] .doc-q-answer-area:focus { background: var(--input-bg) !important; }
+  :root[data-theme="dark"] .doc-q-answer-area::placeholder { color: var(--dim) !important; }
+  :root[data-theme="dark"] .doc-q-footer { background: var(--bg-soft) !important; border-top-color: var(--border) !important; }
+  :root[data-theme="dark"] .doc-q-status { color: var(--muted) !important; }
+  :root[data-theme="dark"] .doc-q-star-btn.starred {
+    background: var(--warn-bg) !important; color: var(--warn) !important; border-color: var(--warn) !important;
+  }
+
+  /* Regular Q cards */
+  :root[data-theme="dark"] .q-question { color: var(--text-strong) !important; }
+  :root[data-theme="dark"] .q-meta { color: var(--muted) !important; }
+  :root[data-theme="dark"] .q-num { background: var(--accent-light) !important; color: var(--accent) !important; }
+  :root[data-theme="dark"] .answer-textarea,
+  :root[data-theme="dark"] .answer-textarea:focus,
+  :root[data-theme="dark"] .q-answer-text { color: var(--text) !important; }
+  :root[data-theme="dark"] .answer-textarea::placeholder,
+  :root[data-theme="dark"] .doc-q-answer-area::placeholder,
+  :root[data-theme="dark"] textarea::placeholder { color: var(--dim) !important; }
+  :root[data-theme="dark"] .q-body { background: transparent !important; }
+
+  /* Lift body paragraphs generally */
+  :root[data-theme="dark"] p, :root[data-theme="dark"] li { color: var(--text); }
+  :root[data-theme="dark"] strong, :root[data-theme="dark"] b { color: var(--text-strong); }
+  :root[data-theme="dark"] em, :root[data-theme="dark"] i { color: inherit; }
+
+  /* Section-level body text inside .content-block */
+  :root[data-theme="dark"] .content-block,
+  :root[data-theme="dark"] .content-block p,
+  :root[data-theme="dark"] .content-list li { color: var(--text) !important; }
+
+  /* Save indicator visible in light side too */
+  :root[data-theme="dark"] .save-indicator { color: var(--muted); }
 </style>
 </head>
 <body>
