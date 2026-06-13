@@ -893,10 +893,27 @@
   }
   .resume-result-btn:hover { background: rgba(255,255,255,0.2); }
   .resume-result-body {
-    padding: 24px; font-size: 13px; line-height: 1.9; color: var(--text);
-    white-space: pre-wrap; font-family: 'SF Mono', 'Fira Code', monospace;
-    min-height: 200px;
+    padding: 32px 40px; min-height: 200px;
+    font-family: Calibri, 'Segoe UI', Arial, sans-serif;
+    font-size: 13.5px; line-height: 1.55; color: #1f2937;
+    background: #fff;
   }
+  .ats-name { font-size: 22px; font-weight: 700; color: #111827; margin: 0 0 2px; letter-spacing: 0.2px; }
+  .ats-contact { font-size: 12px; color: #4b5563; margin-bottom: 14px; }
+  .ats-section {
+    font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: #1f2937;
+    border-bottom: 1.5px solid #1f2937;
+    padding-bottom: 3px; margin: 18px 0 8px;
+  }
+  .ats-jobline { display: flex; justify-content: space-between; gap: 16px; margin-top: 10px; }
+  .ats-jobline-left { font-weight: 700; color: #111827; }
+  .ats-jobline-right { color: #4b5563; font-size: 12.5px; white-space: nowrap; }
+  .ats-subline { font-style: italic; color: #4b5563; font-size: 12.5px; margin-bottom: 4px; }
+  .ats-bullet { padding-left: 18px; position: relative; margin: 2px 0; }
+  .ats-bullet::before { content: '•'; position: absolute; left: 4px; color: #1f2937; }
+  .ats-para { margin: 4px 0; }
+  .ats-stream-raw { white-space: pre-wrap; font-family: 'SF Mono', monospace; font-size: 12px; color: var(--muted); }
   .resume-stream-indicator {
     padding: 16px 24px; color: var(--muted); font-size: 13px;
     display: flex; align-items: center; gap: 10px;
@@ -2510,29 +2527,145 @@ function clearBaseResume() {
   renderResumeSection();
 }
 
+// Renders ATS-friendly markdown-like resume text into structured HTML.
+// Accepts the conventions from the curation prompt:
+//   # NAME          → ats-name
+//   plain line after name → ats-contact
+//   ## SECTION      → ats-section
+//   ### Title — Co  → ats-jobline (Title — Co left, optional date right if on same line)
+//   *italic line*   → ats-subline
+//   - bullet        → ats-bullet
+//   other          → ats-para
+function renderAtsResume(raw) {
+  if (!raw || !raw.trim()) return '';
+  // Strip stray code fences just in case
+  let text = raw.replace(/^```[a-z]*\n?/i, '').replace(/```\s*$/i, '').trim();
+  // Drop any "Tailoring Notes" trailer if model still adds it
+  text = text.replace(/\n+#+\s*tailoring\s*notes[\s\S]*$/i, '').trim();
+
+  const lines = text.split('\n');
+  let html = '';
+  let sawName = false;
+  let inBullets = false;
+  const closeBullets = () => { if (inBullets) { /* no list wrapper needed since we use divs */ inBullets = false; } };
+
+  // Inline formatting: **bold**, *italic* (avoiding section markers handled separately)
+  const inline = s => {
+    let out = escapeHtml(s);
+    out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    out = out.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+    return out;
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const ln = lines[i].trim();
+    if (!ln) { closeBullets(); continue; }
+
+    // # NAME
+    if (/^#\s+/.test(ln) && !sawName) {
+      closeBullets();
+      sawName = true;
+      html += `<h1 class="ats-name">${inline(ln.replace(/^#\s+/, ''))}</h1>`;
+      // Treat next non-empty line as contact line if not another heading
+      let j = i + 1;
+      while (j < lines.length && !lines[j].trim()) j++;
+      if (j < lines.length && !/^#/.test(lines[j].trim()) && !/^-/.test(lines[j].trim())) {
+        html += `<div class="ats-contact">${inline(lines[j].trim())}</div>`;
+        i = j;
+      }
+      continue;
+    }
+    // ## SECTION
+    if (/^##\s+(?!#)/.test(ln)) {
+      closeBullets();
+      html += `<div class="ats-section">${inline(ln.replace(/^##\s+/, ''))}</div>`;
+      continue;
+    }
+    // ### Job Title — Company  (optionally with date on same line via |)
+    if (/^###\s+/.test(ln)) {
+      closeBullets();
+      const content = ln.replace(/^###\s+/, '');
+      // Try to split a trailing "| date" if present
+      const pipeSplit = content.split(/\s+\|\s+/);
+      if (pipeSplit.length >= 2) {
+        const right = pipeSplit.pop();
+        const left = pipeSplit.join(' | ');
+        html += `<div class="ats-jobline"><span class="ats-jobline-left">${inline(left)}</span><span class="ats-jobline-right">${inline(right)}</span></div>`;
+      } else {
+        html += `<div class="ats-jobline"><span class="ats-jobline-left">${inline(content)}</span></div>`;
+      }
+      continue;
+    }
+    // *italic single-line subtitle* (date / location)
+    if (/^\*[^*].*[^*]\*$/.test(ln)) {
+      closeBullets();
+      html += `<div class="ats-subline">${inline(ln.replace(/^\*|\*$/g, ''))}</div>`;
+      continue;
+    }
+    // - bullet
+    if (/^[-•]\s+/.test(ln)) {
+      inBullets = true;
+      html += `<div class="ats-bullet">${inline(ln.replace(/^[-•]\s+/, ''))}</div>`;
+      continue;
+    }
+    // Plain paragraph
+    closeBullets();
+    if (!sawName) {
+      // First non-empty line and no '#' name marker — treat as name
+      sawName = true;
+      html += `<h1 class="ats-name">${inline(ln)}</h1>`;
+      continue;
+    }
+    html += `<div class="ats-para">${inline(ln)}</div>`;
+  }
+  closeBullets();
+  return html;
+}
+
+// Inline ATS styles for download/print (self-contained — no var() vs root)
+const ATS_DOWNLOAD_CSS = `
+  body { font-family: Calibri, 'Segoe UI', Arial, sans-serif; font-size: 11pt;
+    line-height: 1.45; color: #1f2937; max-width: 8.5in; margin: 0.6in auto;
+    padding: 0 0.5in; }
+  .ats-name { font-size: 20pt; font-weight: 700; color: #111827; margin: 0 0 2px; }
+  .ats-contact { font-size: 10pt; color: #4b5563; margin-bottom: 14px; }
+  .ats-section { font-size: 10.5pt; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: #1f2937;
+    border-bottom: 1.2pt solid #1f2937; padding-bottom: 2px; margin: 14px 0 6px; }
+  .ats-jobline { display: flex; justify-content: space-between; gap: 16px;
+    margin-top: 8px; }
+  .ats-jobline-left { font-weight: 700; color: #111827; }
+  .ats-jobline-right { color: #4b5563; font-size: 10.5pt; white-space: nowrap; }
+  .ats-subline { font-style: italic; color: #4b5563; font-size: 10.5pt; margin-bottom: 3px; }
+  .ats-bullet { padding-left: 18px; position: relative; margin: 2px 0; }
+  .ats-bullet::before { content: '•'; position: absolute; left: 4px; color: #1f2937; }
+  .ats-para { margin: 3px 0; }
+  strong { font-weight: 700; } em { font-style: italic; }
+  @media print { body { margin: 0.5in; padding: 0; max-width: 100%; } }
+`;
+
+function buildAtsHtmlDoc(rawText, title) {
+  const body = renderAtsResume(rawText);
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title>
+<style>${ATS_DOWNLOAD_CSS}</style></head><body>${body}</body></html>`;
+}
+
 function downloadResumeText(text, company, role, fmt) {
   if (!text) return;
   const safe = s => (s || '').replace(/[^a-z0-9_\-]/gi, '_').slice(0, 40);
   const stem = ['Resume', safe(company), safe(role)].filter(Boolean).join('_') || 'Curated_Resume';
   let blob, ext;
   if (fmt === 'html') {
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${stem}</title>
-<style>
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Calibri,Arial,sans-serif;
-       max-width:850px;margin:40px auto;padding:0 40px;color:#1f2937;font-size:13px;line-height:1.55}
-  h1{font-size:22px;margin:0 0 4px;color:#111827}
-  h2{font-size:13px;text-transform:uppercase;letter-spacing:1.2px;color:#4f46e5;
-     border-bottom:1.5px solid #4f46e5;padding-bottom:3px;margin:22px 0 8px}
-  h3{font-size:14px;margin:14px 0 2px;color:#111827}
-  p{margin:4px 0}
-  ul{padding-left:20px;margin:6px 0} li{margin:3px 0}
-  @media print { body { margin: 20px; padding: 0; } }
-</style></head><body><pre style="white-space:pre-wrap;font-family:inherit;font-size:13px">${
-  text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-}</pre></body></html>`;
+    const html = buildAtsHtmlDoc(text, stem);
     blob = new Blob([html], { type: 'text/html' }); ext = 'html';
   } else {
-    blob = new Blob([text], { type: 'text/plain' }); ext = 'txt';
+    // Strip markdown markers for plain-text export
+    const plain = text
+      .replace(/^#+\s+/gm, '')          // headings → plain
+      .replace(/\*\*([^*]+)\*\*/g, '$1') // bold
+      .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1$2') // italics
+      .replace(/^[-]\s+/gm, '• ');       // dash bullets → •
+    blob = new Blob([plain], { type: 'text/plain' }); ext = 'txt';
   }
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -2543,10 +2676,11 @@ function downloadResumeText(text, company, role, fmt) {
 
 function downloadCurrentResult(fmt) {
   const body = document.getElementById('resume-result-body');
-  if (!body || !body.textContent.trim()) return;
+  const raw = body?.dataset?.raw || body?.textContent || '';
+  if (!raw.trim()) return;
   const company = document.getElementById('resume-company-input')?.value || '';
   const role = document.getElementById('resume-role-input')?.value || '';
-  downloadResumeText(body.textContent, company, role, fmt);
+  downloadResumeText(raw, company, role, fmt);
 }
 
 function downloadSavedResume(idx, fmt) {
@@ -2558,36 +2692,35 @@ function downloadSavedResume(idx, fmt) {
 
 function printCurrentResult() {
   const body = document.getElementById('resume-result-body');
-  if (!body || !body.textContent.trim()) return;
+  const raw = body?.dataset?.raw || body?.textContent || '';
+  if (!raw.trim()) return;
   const company = document.getElementById('resume-company-input')?.value || '';
   const role = document.getElementById('resume-role-input')?.value || '';
   const title = ['Resume', company, role].filter(Boolean).join(' — ');
   const w = window.open('', '_blank');
-  w.document.write(`<!DOCTYPE html><html><head><title>${title}</title>
-<style>body{font-family:-apple-system,'Segoe UI',Calibri,Arial,sans-serif;max-width:850px;
-margin:30px auto;padding:0 40px;font-size:13px;line-height:1.55;color:#1f2937;white-space:pre-wrap}
-@media print { body { margin: 20px; padding: 0; } }
-</style></head><body>${body.textContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</body></html>`);
+  w.document.write(buildAtsHtmlDoc(raw, title));
   w.document.close();
-  setTimeout(()=>w.print(), 300);
+  setTimeout(()=>w.print(), 350);
 }
 
 function copyResumeResult() {
   const body = document.getElementById('resume-result-body');
   if (!body) return;
-  navigator.clipboard.writeText(body.textContent).then(()=>{
+  const raw = body.dataset.raw || body.textContent;
+  navigator.clipboard.writeText(raw).then(()=>{
     const btn = document.getElementById('copy-resume-btn');
-    if (btn) { btn.textContent = '✓ Copied'; setTimeout(()=>btn.textContent='Copy',1500); }
+    if (btn) { btn.textContent = '✓ Copied'; setTimeout(()=>btn.textContent='📋 Copy',1500); }
   });
 }
 
 function saveResumeResult() {
   const body = document.getElementById('resume-result-body');
   if (!body) return;
+  const raw = body.dataset.raw || body.textContent;
   const state = loadResumeState();
   const results = state.results || [];
-  results.unshift({ id: Date.now(), text: body.textContent, company: document.getElementById('resume-company-input')?.value || '', role: document.getElementById('resume-role-input')?.value || '', date: new Date().toLocaleDateString() });
-  state.results = results.slice(0, 10); // keep last 10
+  results.unshift({ id: Date.now(), text: raw, company: document.getElementById('resume-company-input')?.value || '', role: document.getElementById('resume-role-input')?.value || '', date: new Date().toLocaleDateString() });
+  state.results = results.slice(0, 10);
   saveResumeState(state);
   renderResumeSection();
 }
@@ -2616,17 +2749,49 @@ async function curateResume() {
   indicator.style.display = 'flex';
   resultBody.textContent = '';
 
-  const prompt = `You are an expert resume consultant helping a candidate tailor their resume for a specific job.
+  const prompt = `You are an expert resume consultant. Tailor the candidate's resume for a specific job, producing an ATS-friendly output.
 
-IMPORTANT RULES:
+STRICT RULES:
 - Do NOT invent, fabricate, or exaggerate any experience, skill, or achievement
 - Do NOT add anything that is not already in the base resume
-- Your job is ONLY to: reorder, reword, and highlight existing content to best match the job description
-- Use stronger, more precise action verbs where appropriate
-- Quantify existing achievements more clearly if the numbers are already in the resume
-- Emphasize the skills and experiences most relevant to this role
-- Remove or de-emphasize content less relevant to this specific role
+- Reorder, reword, and highlight existing content to best match the job description
+- Use stronger action verbs where appropriate
+- Quantify achievements only if the numbers already exist in the resume
 - Match terminology from the job description where the candidate already has that experience
+- Do NOT include any tailoring notes, change log, or explanations — output ONLY the resume itself
+- Do NOT include code fences, backticks, or any commentary before/after the resume
+
+OUTPUT FORMAT — ATS-friendly Markdown (this exact structure):
+
+# FULL NAME
+City, State | phone | email | linkedin/github
+
+## PROFESSIONAL SUMMARY
+2-3 sentence summary tailored to this role using only facts from the base resume.
+
+## SKILLS
+Category: skill, skill, skill | Category: skill, skill | (or pipe-separated list)
+
+## EXPERIENCE
+
+### Job Title — Company
+*Location | Start Date – End Date*
+- Achievement bullet with strong verb and metric
+- Another bullet
+- Another bullet
+
+### Job Title — Company
+*Location | Start Date – End Date*
+- bullet
+- bullet
+
+## EDUCATION
+Degree, Institution — Year
+
+## CERTIFICATIONS
+Cert name — Issuer, Year
+
+(Include other sections only if present in the base resume — e.g., PROJECTS, PUBLICATIONS, AWARDS — using the same '## SECTION' header style.)
 
 BASE RESUME:
 ${base}
@@ -2634,10 +2799,7 @@ ${base}
 JOB DESCRIPTION${company ? ` — ${company}` : ''}${role ? ` / ${role}` : ''}:
 ${jd}
 
-OUTPUT:
-Produce a tailored version of the resume. Keep the same overall structure but reorder sections/bullets to lead with the most relevant experience. Use the job description's language where it matches the candidate's actual experience. Add a brief 2-3 sentence "Professional Summary" at the top tailored to this specific role.
-
-After the resume, add a section called "TAILORING NOTES" that explains what you changed and why — so the candidate understands every modification made.`;
+Produce the tailored resume now. No preamble, no notes, no closing remarks — just the resume in the format above.`;
 
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -2660,10 +2822,14 @@ After the resume, add a section called "TAILORING NOTES" that explains what you 
 
     indicator.style.display = 'none';
     resultBody.style.display = 'block';
+    resultBody.dataset.raw = '';
+    resultBody.innerHTML = '';
 
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
+    let accumulated = '';
+    let lastRender = 0;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -2678,12 +2844,21 @@ After the resume, add a section called "TAILORING NOTES" that explains what you 
         try {
           const ev = JSON.parse(data);
           if (ev.type === 'content_block_delta' && ev.delta?.text) {
-            resultBody.textContent += ev.delta.text;
-            resultBody.scrollIntoView({ block: 'end', behavior: 'smooth' });
+            accumulated += ev.delta.text;
+            // Throttle re-renders during stream
+            const now = Date.now();
+            if (now - lastRender > 120) {
+              resultBody.innerHTML = renderAtsResume(accumulated);
+              resultBody.scrollTop = resultBody.scrollHeight;
+              lastRender = now;
+            }
           }
         } catch(e) {}
       }
     }
+    // Final render
+    resultBody.dataset.raw = accumulated;
+    resultBody.innerHTML = renderAtsResume(accumulated);
   } catch(err) {
     indicator.style.display = 'none';
     resultBody.style.display = 'block';
@@ -2883,7 +3058,7 @@ function renderResumeSection() {
       </div>
       <button class="resume-curate-btn" id="curate-resume-btn" onclick="curateResume()">✨ Curate Resume</button>
       <div class="resume-disclaimer">
-        ⚠️ <strong>Honesty policy:</strong> The AI will only reorder, reword, and emphasize content already in your base resume. It will never add skills, experiences, or achievements you don't have. Every change will be explained in the "Tailoring Notes" at the bottom of the output.
+        ⚠️ <strong>Honesty policy:</strong> The AI will only reorder, reword, and emphasize content already in your base resume. It will never add skills, experiences, or achievements you don't have.
       </div>
     </div>
   </div>
@@ -2919,7 +3094,13 @@ function viewSavedResume(idx) {
   if (panel && body) {
     panel.classList.add('visible');
     body.style.display = 'block';
-    body.textContent = r.text;
+    body.dataset.raw = r.text;
+    body.innerHTML = renderAtsResume(r.text);
+    // Restore company/role inputs so downloads use them
+    const c = document.getElementById('resume-company-input');
+    const ro = document.getElementById('resume-role-input');
+    if (c) c.value = r.company || '';
+    if (ro) ro.value = r.role || '';
     panel.scrollIntoView({ behavior: 'smooth' });
   }
 }
