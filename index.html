@@ -3498,7 +3498,7 @@ async function handleResumeFile(file) {
 
     if (!text.trim()) throw new Error('Could not extract text from this file. Please try a different format.');
 
-    // Store file as base64 for rich preview persistence
+    // Store file as base64 locally for immediate rich preview
     const b64 = await new Promise(resolve => {
       const reader = new FileReader();
       reader.onload = e => resolve(e.target.result.split(',')[1]);
@@ -3511,8 +3511,24 @@ async function handleResumeFile(file) {
     state.base = text;
     state.baseFile = { name: file.name, size: file.size, type: ext.toUpperCase(), saved: Date.now() };
     state.baseSaved = Date.now();
-    saveResumeState(state);
 
+    // Upload to Supabase Storage for cross-device access
+    if (sb && _currentUser) {
+      setStatus('⏳ Uploading file to cloud…');
+      try {
+        const filePath = `${_currentUser.id}/resume.${ext}`;
+        const { error: upErr } = await sb.storage
+          .from('resume-files')
+          .upload(filePath, file, { upsert: true, contentType: file.type || 'application/octet-stream' });
+        if (!upErr) {
+          const { data: urlData } = await sb.storage.from('resume-files').createSignedUrl(filePath, 60 * 60 * 24 * 365); // 1-year signed URL
+          if (urlData?.signedUrl) state.fileUrl = urlData.signedUrl;
+          state.filePath = filePath;
+        }
+      } catch(e) { console.warn('Storage upload failed', e); }
+    }
+
+    saveResumeState(state);
     setStatus('✓ Resume saved — ' + text.length.toLocaleString() + ' characters extracted', 'success');
     renderResumeSection();
   } catch(err) {
@@ -3558,9 +3574,10 @@ function toggleResumePreview() {
 async function loadRichPreview(container) {
   const fileData = loadResumeFileData();
   const state = loadResumeState();
-  const ext = fileData ? fileData.ext : (state.baseFile ? state.baseFile.type.toLowerCase() : 'txt');
+  const ext = fileData ? fileData.ext
+    : (state.baseFile ? state.baseFile.type.toLowerCase() : 'txt');
 
-  if (!fileData && !state.base) {
+  if (!fileData && !state.base && !state.fileUrl) {
     container.textContent = 'No preview available.';
     return;
   }
@@ -3568,17 +3585,32 @@ async function loadRichPreview(container) {
   container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Loading preview…</div>';
 
   try {
-    if (ext === 'pdf' && fileData) {
-      // Native PDF viewer via blob URL
-      const bytes = Uint8Array.from(atob(fileData.b64), c => c.charCodeAt(0));
-      const blob = new Blob([bytes], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
+    // Prefer local base64 (instant); fall back to Supabase Storage signed URL
+    const hasLocal = !!fileData;
+    const hasCloud = !!state.fileUrl;
+
+    if (ext === 'pdf' && (hasLocal || hasCloud)) {
+      let url;
+      if (hasLocal) {
+        const bytes = Uint8Array.from(atob(fileData.b64), c => c.charCodeAt(0));
+        url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+      } else {
+        // Refresh signed URL if needed (they're long-lived but let's be safe)
+        url = await getFreshSignedUrl(state) || state.fileUrl;
+      }
       container.innerHTML = `<iframe src="${url}#toolbar=1&navpanes=0" style="width:100%;height:520px;border:none;border-radius:6px" title="Resume PDF"></iframe>`;
-    } else if (ext === 'docx' && fileData) {
-      // Mammoth rich HTML render
+
+    } else if (ext === 'docx' && (hasLocal || hasCloud)) {
       if (typeof mammoth === 'undefined') throw new Error('DOCX library not ready');
-      const bytes = Uint8Array.from(atob(fileData.b64), c => c.charCodeAt(0)).buffer;
-      const result = await mammoth.convertToHtml({ arrayBuffer: bytes });
+      let arrayBuffer;
+      if (hasLocal) {
+        arrayBuffer = Uint8Array.from(atob(fileData.b64), c => c.charCodeAt(0)).buffer;
+      } else {
+        const freshUrl = await getFreshSignedUrl(state) || state.fileUrl;
+        const resp = await fetch(freshUrl);
+        arrayBuffer = await resp.arrayBuffer();
+      }
+      const result = await mammoth.convertToHtml({ arrayBuffer });
       const docHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
         body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;
           line-height:1.7;color:#1f2937;padding:20px 28px;margin:0}
@@ -3591,14 +3623,15 @@ async function loadRichPreview(container) {
         th{background:#f9fafb;font-weight:600}
       </style></head><body>${result.value}</body></html>`;
       container.innerHTML = `<iframe srcdoc="${docHtml.replace(/"/g, '&quot;')}" style="width:100%;height:520px;border:none;border-radius:6px" title="Resume DOCX" sandbox="allow-same-origin"></iframe>`;
+
     } else {
-      // TXT or fallback (no raw file stored — e.g. uploaded pre-feature)
+      // TXT or fallback
       const text = state.base || '';
-      const needsReupload = !fileData && (ext === 'pdf' || ext === 'docx');
+      const needsReupload = !hasLocal && !hasCloud && (ext === 'pdf' || ext === 'docx');
       const banner = needsReupload ? `
         <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:#fef3c7;border-bottom:1px solid #fde68a;font-size:12px;color:#92400e">
           <span>ℹ️</span>
-          <span>Showing structured text view. <strong>Re-upload</strong> the file to see the original ${ext.toUpperCase()} rendered with full formatting.</span>
+          <span>Showing text view. <strong>Re-upload</strong> the file to restore the rich ${ext.toUpperCase()} preview.</span>
         </div>` : '';
       container.innerHTML = banner + `<div class="rpv-doc">${formatResumePreview(text)}</div>`;
     }
@@ -3607,10 +3640,29 @@ async function loadRichPreview(container) {
   }
 }
 
-function clearBaseResume() {
+async function getFreshSignedUrl(state) {
+  if (!sb || !_currentUser || !state.filePath) return null;
+  try {
+    const { data } = await sb.storage.from('resume-files').createSignedUrl(state.filePath, 60 * 60 * 24 * 365);
+    if (data?.signedUrl) {
+      // Cache the fresh URL
+      state.fileUrl = data.signedUrl;
+      saveResumeState(state);
+      return data.signedUrl;
+    }
+  } catch(e) { console.warn('Signed URL refresh failed', e); }
+  return null;
+}
+
+async function clearBaseResume() {
   if (!confirm('Remove the saved resume? This cannot be undone.')) return;
   const state = loadResumeState();
+  // Delete from Supabase Storage
+  if (sb && _currentUser && state.filePath) {
+    try { await sb.storage.from('resume-files').remove([state.filePath]); } catch(e) {}
+  }
   delete state.base; delete state.baseFile; delete state.baseSaved;
+  delete state.fileUrl; delete state.filePath;
   saveResumeState(state);
   try { localStorage.removeItem('pm_resume_file'); } catch(e) {}
   renderResumeSection();
