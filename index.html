@@ -2510,6 +2510,68 @@ function clearBaseResume() {
   renderResumeSection();
 }
 
+function downloadResumeText(text, company, role, fmt) {
+  if (!text) return;
+  const safe = s => (s || '').replace(/[^a-z0-9_\-]/gi, '_').slice(0, 40);
+  const stem = ['Resume', safe(company), safe(role)].filter(Boolean).join('_') || 'Curated_Resume';
+  let blob, ext;
+  if (fmt === 'html') {
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${stem}</title>
+<style>
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Calibri,Arial,sans-serif;
+       max-width:850px;margin:40px auto;padding:0 40px;color:#1f2937;font-size:13px;line-height:1.55}
+  h1{font-size:22px;margin:0 0 4px;color:#111827}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:1.2px;color:#4f46e5;
+     border-bottom:1.5px solid #4f46e5;padding-bottom:3px;margin:22px 0 8px}
+  h3{font-size:14px;margin:14px 0 2px;color:#111827}
+  p{margin:4px 0}
+  ul{padding-left:20px;margin:6px 0} li{margin:3px 0}
+  @media print { body { margin: 20px; padding: 0; } }
+</style></head><body><pre style="white-space:pre-wrap;font-family:inherit;font-size:13px">${
+  text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+}</pre></body></html>`;
+    blob = new Blob([html], { type: 'text/html' }); ext = 'html';
+  } else {
+    blob = new Blob([text], { type: 'text/plain' }); ext = 'txt';
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = stem + '.' + ext;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 100);
+}
+
+function downloadCurrentResult(fmt) {
+  const body = document.getElementById('resume-result-body');
+  if (!body || !body.textContent.trim()) return;
+  const company = document.getElementById('resume-company-input')?.value || '';
+  const role = document.getElementById('resume-role-input')?.value || '';
+  downloadResumeText(body.textContent, company, role, fmt);
+}
+
+function downloadSavedResume(idx, fmt) {
+  const state = loadResumeState();
+  const r = (state.results || [])[idx];
+  if (!r) return;
+  downloadResumeText(r.text, r.company, r.role, fmt);
+}
+
+function printCurrentResult() {
+  const body = document.getElementById('resume-result-body');
+  if (!body || !body.textContent.trim()) return;
+  const company = document.getElementById('resume-company-input')?.value || '';
+  const role = document.getElementById('resume-role-input')?.value || '';
+  const title = ['Resume', company, role].filter(Boolean).join(' — ');
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>${title}</title>
+<style>body{font-family:-apple-system,'Segoe UI',Calibri,Arial,sans-serif;max-width:850px;
+margin:30px auto;padding:0 40px;font-size:13px;line-height:1.55;color:#1f2937;white-space:pre-wrap}
+@media print { body { margin: 20px; padding: 0; } }
+</style></head><body>${body.textContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(), 300);
+}
+
 function copyResumeResult() {
   const body = document.getElementById('resume-result-body');
   if (!body) return;
@@ -2531,12 +2593,12 @@ function saveResumeResult() {
 }
 
 async function curateResume() {
-  const base = document.getElementById('base-resume-ta')?.value?.trim();
+  const base = (loadResumeState().base || '').trim();
   const jd   = document.getElementById('resume-jd-ta')?.value?.trim();
   const company = document.getElementById('resume-company-input')?.value?.trim() || '';
   const role    = document.getElementById('resume-role-input')?.value?.trim() || '';
 
-  if (!base) { alert('Please save your base resume first.'); return; }
+  if (!base) { alert('Please upload your base resume first.'); return; }
   if (!jd)   { alert('Please paste the job description.'); return; }
 
   const apiKey = getApiKey();
@@ -2777,8 +2839,10 @@ function renderResumeSection() {
           <div style="font-size:13px;font-weight:700;color:var(--text)">${escapeHtml(r.company||'Unnamed')} ${r.role ? '— ' + escapeHtml(r.role) : ''}</div>
           <div style="font-size:11px;color:var(--muted);margin-top:2px">${r.date||''} · ${(r.text||'').length.toLocaleString()} characters</div>
         </div>
-        <button onclick="viewSavedResume(${i})" style="padding:5px 14px;border:1px solid var(--border);border-radius:5px;font-size:12px;cursor:pointer;background:var(--bg)">View</button>
-        <button onclick="deleteSavedResume(${i})" style="padding:5px 14px;border:1px solid var(--border);border-radius:5px;font-size:12px;cursor:pointer;background:var(--bg);color:#dc2626">Delete</button>
+        <button onclick="viewSavedResume(${i})" style="padding:5px 12px;border:1px solid var(--border);border-radius:5px;font-size:12px;cursor:pointer;background:var(--bg)">View</button>
+        <button onclick="downloadSavedResume(${i},'txt')" style="padding:5px 12px;border:1px solid var(--border);border-radius:5px;font-size:12px;cursor:pointer;background:var(--bg)">⬇ .txt</button>
+        <button onclick="downloadSavedResume(${i},'html')" style="padding:5px 12px;border:1px solid var(--border);border-radius:5px;font-size:12px;cursor:pointer;background:var(--bg)">⬇ .html</button>
+        <button onclick="deleteSavedResume(${i})" style="padding:5px 12px;border:1px solid var(--border);border-radius:5px;font-size:12px;cursor:pointer;background:var(--bg);color:#dc2626">Delete</button>
       </div>`).join('')}
     </div>
   </div>` : '';
@@ -2828,8 +2892,11 @@ function renderResumeSection() {
     <div class="resume-result-header">
       <h3>✅ Curated Resume</h3>
       <div class="resume-result-actions">
-        <button class="resume-result-btn" id="copy-resume-btn" onclick="copyResumeResult()">Copy</button>
-        <button class="resume-result-btn" onclick="saveResumeResult()">Save Version</button>
+        <button class="resume-result-btn" id="copy-resume-btn" onclick="copyResumeResult()">📋 Copy</button>
+        <button class="resume-result-btn" onclick="downloadCurrentResult('txt')">⬇ .txt</button>
+        <button class="resume-result-btn" onclick="downloadCurrentResult('html')">⬇ .html</button>
+        <button class="resume-result-btn" onclick="printCurrentResult()">🖨 Print / PDF</button>
+        <button class="resume-result-btn" onclick="saveResumeResult()">💾 Save Version</button>
       </div>
     </div>
     <div id="resume-stream-indicator" class="resume-stream-indicator" style="display:none">
