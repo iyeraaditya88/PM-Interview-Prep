@@ -1341,6 +1341,8 @@
     }
     .btn-add-company, .btn-delete-company { display: none !important; }
     .field-input { background: transparent !important; }
+  }
+
   /* ── Resume Upload Zone ── */
   .resume-upload-zone {
     border: 2px dashed var(--border); border-radius: 12px;
@@ -1368,46 +1370,66 @@
   .resume-upload-btn:hover { background: #4338ca; }
   /* File saved card */
   .rfi-card {
-    display: flex; align-items: center; gap: 16px;
-    padding: 18px 20px;
+    display: flex; align-items: center; gap: 18px;
+    padding: 22px 24px;
+    background: linear-gradient(180deg, #fafbff 0%, #ffffff 100%);
     border-bottom: 1px solid var(--border);
   }
   .rfi-type-badge {
-    width: 44px; height: 52px; border-radius: 8px;
+    width: 56px; height: 68px; border-radius: 10px;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    font-size: 10px; font-weight: 800; letter-spacing: 0.5px;
-    flex-shrink: 0; gap: 2px;
+    font-size: 10px; font-weight: 800; letter-spacing: 0.8px;
+    flex-shrink: 0; gap: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06), inset 0 0 0 1px rgba(255,255,255,0.4);
   }
-  .rfi-type-badge.pdf  { background: #fee2e2; color: #b91c1c; }
-  .rfi-type-badge.docx { background: #dbeafe; color: #1d4ed8; }
-  .rfi-type-badge.txt  { background: #f3f4f6; color: #374151; }
-  .rfi-type-badge .rfi-badge-icon { font-size: 20px; line-height: 1; }
+  .rfi-type-badge.pdf  { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #b91c1c; }
+  .rfi-type-badge.docx { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
+  .rfi-type-badge.txt  { background: linear-gradient(135deg, #f3f4f6, #e5e7eb); color: #374151; }
+  .rfi-type-badge .rfi-badge-icon { font-size: 24px; line-height: 1; }
   .rfi-info { flex: 1; min-width: 0; }
   .rfi-filename {
-    font-size: 14px; font-weight: 700; color: var(--text);
+    font-size: 15px; font-weight: 700; color: var(--text);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    letter-spacing: -0.1px;
   }
   .rfi-stats {
-    display: flex; gap: 10px; margin-top: 4px; flex-wrap: wrap;
+    display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; align-items: center;
   }
   .rfi-stat {
-    font-size: 11.5px; color: var(--muted);
-    display: flex; align-items: center; gap: 4px;
+    font-size: 12px; color: var(--muted);
+    display: inline-flex; align-items: center;
+    font-variant-numeric: tabular-nums;
   }
-  .rfi-stat::before { content: ''; }
   .rfi-stat + .rfi-stat::before {
-    content: '·'; margin-right: 6px; color: #d1d5db;
+    content: '•'; margin: 0 8px 0 0; color: #d1d5db;
   }
   .rfi-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .rfi-btn {
-    padding: 6px 14px; border-radius: 7px; font-size: 12px; font-weight: 600;
-    cursor: pointer; transition: all 0.15s; border: 1px solid var(--border);
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 8px;
+    font-size: 12.5px; font-weight: 600; letter-spacing: 0.1px;
+    cursor: pointer; transition: all 0.15s;
+    border: 1px solid transparent;
+    font-family: inherit; line-height: 1;
     white-space: nowrap;
   }
-  .rfi-btn.replace { background: var(--bg); color: var(--text); }
-  .rfi-btn.replace:hover { background: #f3f4f6; border-color: #d1d5db; }
-  .rfi-btn.remove  { background: #fff; color: #dc2626; border-color: #fca5a5; }
-  .rfi-btn.remove:hover  { background: #fef2f2; }
+  .rfi-btn.replace {
+    background: var(--accent); color: #fff;
+    box-shadow: 0 1px 3px rgba(79,70,229,0.25), 0 1px 2px rgba(79,70,229,0.18);
+  }
+  .rfi-btn.replace:hover {
+    background: #4338ca;
+    box-shadow: 0 3px 8px rgba(79,70,229,0.35), 0 2px 4px rgba(79,70,229,0.2);
+    transform: translateY(-1px);
+  }
+  .rfi-btn.remove {
+    background: #fff; color: #b91c1c;
+    border-color: #fecaca;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .rfi-btn.remove:hover {
+    background: #fef2f2; border-color: #fca5a5; color: #991b1b;
+  }
 
   .resume-preview-toggle {
     display: flex; align-items: center; justify-content: space-between;
@@ -1450,7 +1472,6 @@
   }
   .resume-parse-status.error { color: #dc2626; }
   .resume-parse-status.success { color: #059669; }
-}
 </style>
 </head>
 <body>
