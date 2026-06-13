@@ -2121,7 +2121,7 @@ function buildNav() {
   html += `<a class="nav-item" id="nav-section_1_what_changes_at_the_principal_level" onclick="showSection('section_1_what_changes_at_the_principal_level')">Section 1 — Principal Level</a>`;
   html += `<a class="nav-item" id="nav-section_12_company_research_template" onclick="showSection('section_12_company_research_template')">&#127970; Dream Companies</a>`;
 
-  html += '<div class="nav-section-label">Interview Questions</div>';
+  html += '<div class="nav-section-label">Core Learnings</div>';
   const qSections = DATA.filter(s => s.questions && s.questions.length > 0);
   qSections.forEach(s => {
     const short = s.title.replace(/Section \d+ — /, '').replace(' Questions', '');
