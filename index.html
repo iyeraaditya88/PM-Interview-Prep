@@ -1350,13 +1350,31 @@
     cursor: pointer; user-select: none; margin: 8px 0;
   }
   .resume-preview-box {
-    max-height: 220px; overflow-y: auto;
+    max-height: 320px; overflow-y: auto;
     background: var(--bg); border: 1px solid var(--border);
-    border-radius: 8px; padding: 14px 16px;
-    font-size: 12px; line-height: 1.7; color: #4b5563;
-    white-space: pre-wrap; font-family: 'SF Mono', monospace;
+    border-radius: 8px; padding: 16px 18px;
+    font-size: 12.5px; line-height: 1.65; color: #374151;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     margin-bottom: 14px;
   }
+  .rpv-name {
+    font-size: 15px; font-weight: 800; color: var(--text);
+    letter-spacing: 0.3px; margin-bottom: 3px;
+  }
+  .rpv-contact {
+    font-size: 11.5px; color: var(--muted); margin-bottom: 14px;
+    border-bottom: 1px solid var(--border); padding-bottom: 10px;
+  }
+  .rpv-section {
+    font-size: 10px; font-weight: 800; letter-spacing: 1.2px;
+    color: var(--accent); text-transform: uppercase;
+    margin: 14px 0 5px; border-bottom: 1px solid var(--border);
+    padding-bottom: 3px;
+  }
+  .rpv-bullet { padding-left: 14px; position: relative; margin: 2px 0; }
+  .rpv-bullet::before { content: '•'; position: absolute; left: 2px; color: var(--accent); }
+  .rpv-line { margin: 2px 0; }
+  .rpv-more { font-size: 11px; color: var(--muted); margin-top: 10px; font-style: italic; }
   .resume-parse-status {
     display: flex; align-items: center; gap: 8px;
     font-size: 13px; color: var(--muted); padding: 10px 0;
@@ -2433,6 +2451,74 @@ After the resume, add a section called "TAILORING NOTES" that explains what you 
   }
 }
 
+function formatResumePreview(raw) {
+  // Known resume section headers (all-caps patterns)
+  const SECTION_HEADERS = [
+    'PROFESSIONAL SUMMARY','SUMMARY','OBJECTIVE','PROFILE',
+    'PROFESSIONAL EXPERIENCE','WORK EXPERIENCE','EXPERIENCE',
+    'SKILLS','TECHNICAL SKILLS','CORE COMPETENCIES','COMPETENCIES',
+    'EDUCATION','CERTIFICATIONS','CERTIFICATION','LICENSES',
+    'AWARDS','ACHIEVEMENTS','HONORS',
+    'PROJECTS','PUBLICATIONS','PATENTS','LANGUAGES','INTERESTS',
+    'VOLUNTEER','LEADERSHIP','ACTIVITIES','REFERENCES'
+  ];
+
+  // Split text into tokens by bullet char or common separators
+  // First try to split on bullet points
+  let text = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+  // If text has very few newlines, it's likely a flat blob — inject them
+  const nlCount = (text.match(/\n/g) || []).length;
+  if (nlCount < 5 && text.length > 200) {
+    // Inject newlines before known section headers
+    SECTION_HEADERS.forEach(h => {
+      const re = new RegExp('(?<![A-Z])(' + h + ')(?=[\\s•]|$)', 'g');
+      text = text.replace(re, '\n\n$1\n');
+    });
+    // Split on bullet characters
+    text = text.replace(/([•·‣▸▪])\s*/g, '\n• ');
+    // Split on job date patterns like "Month YYYY – " or "01/2024"
+    text = text.replace(/(\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{4})\s*[–\-]\s*/g, '$1 – ');
+  }
+
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  const CHAR_LIMIT = 3000;
+  let charCount = 0;
+  let html = '';
+  let firstLine = true;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (charCount + line.length > CHAR_LIMIT) {
+      const remaining = raw.length - CHAR_LIMIT;
+      html += `<div class="rpv-more">… (${remaining.toLocaleString()} more characters)</div>`;
+      break;
+    }
+    charCount += line.length;
+
+    const upper = line.toUpperCase();
+    const isSection = SECTION_HEADERS.some(h => upper === h || upper.startsWith(h + ' ') || upper.endsWith(' ' + h));
+    const isBullet = line.startsWith('•') || line.startsWith('-') || line.startsWith('·') || line.startsWith('▪');
+
+    if (firstLine) {
+      // First non-empty line = name
+      html += `<div class="rpv-name">${escapeHtml(line)}</div>`;
+      firstLine = false;
+    } else if (isSection) {
+      html += `<div class="rpv-section">${escapeHtml(line)}</div>`;
+    } else if (isBullet) {
+      const content = line.replace(/^[•\-·▪]\s*/, '');
+      html += `<div class="rpv-bullet">${escapeHtml(content)}</div>`;
+    } else if (i === 1) {
+      // Second line = contact info
+      html += `<div class="rpv-contact">${escapeHtml(line)}</div>`;
+    } else {
+      html += `<div class="rpv-line">${escapeHtml(line)}</div>`;
+    }
+  }
+  return html;
+}
+
 function renderResumeSection() {
   const body = document.getElementById('resume-management-body');
   if (!body) return;
@@ -2461,7 +2547,7 @@ function renderResumeSection() {
         <div class="resume-preview-toggle" onclick="toggleResumePreview()">
           <span id="resume-preview-arrow">▼</span> Preview extracted text
         </div>
-        <div id="resume-preview-box" class="resume-preview-box" style="display:none">${escapeHtml(base.slice(0,2000))}${base.length > 2000 ? '\n\n… (' + (base.length-2000).toLocaleString() + ' more characters)' : ''}</div>
+        <div id="resume-preview-box" class="resume-preview-box" style="display:none">${formatResumePreview(base)}</div>
         <div style="margin-top:8px">
           <input type="file" id="resume-file-input" accept=".pdf,.docx,.txt" style="display:none" onchange="onResumeFileChange(this)">
           <button onclick="triggerResumeUpload()" style="padding:6px 16px;border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;background:var(--bg);color:var(--muted)">↑ Replace with a different file</button>
