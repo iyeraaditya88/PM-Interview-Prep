@@ -232,13 +232,15 @@
   }
 
   .nav-section-label {
-    padding: 16px 20px 4px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
+    padding: 20px 20px 6px;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: #555875;
+    color: #c7d2fe;
+    opacity: 0.85;
   }
+  :root[data-theme="dark"] .nav-section-label { color: #a5b4fc; opacity: 0.95; }
 
   #sidebar-footer {
     padding: 10px 20px;
@@ -1436,44 +1438,89 @@
   }
   .dream-card {
     background: var(--card-bg); border: 1px solid var(--border);
-    border-radius: 12px; padding: 16px 18px; margin-bottom: 14px;
-    transition: box-shadow 0.15s, border-color 0.15s;
+    border-radius: 12px; margin-bottom: 10px; overflow: hidden;
+    transition: box-shadow 0.18s, border-color 0.18s;
   }
-  .dream-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.06); border-color: #c7d2fe; }
-  .dream-card-header {
-    display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+  .dream-card:hover { box-shadow: var(--card-elev-hover, 0 4px 14px rgba(0,0,0,0.06)); border-color: var(--border-strong); }
+  .dream-card.expanded { border-color: rgba(129,140,248,0.35); box-shadow: 0 6px 20px rgba(99,102,241,0.10); }
+  .dream-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 16px; cursor: pointer;
+    transition: background 0.15s;
   }
-  .dream-logo {
-    width: 38px; height: 38px; border-radius: 9px; flex-shrink: 0;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: #fff; font-weight: 800; font-size: 16px;
+  .dream-row:hover { background: rgba(129,140,248,0.05); }
+  .dream-logo-wrap, .dream-logo {
+    width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0;
+    overflow: hidden; position: relative;
+  }
+  .dream-logo-wrap { background: var(--bg-soft); }
+  .dream-logo-img { width: 100%; height: 100%; object-fit: contain; padding: 4px; background: #fff; }
+  :root[data-theme="dark"] .dream-logo-img { background: #fff; }
+  .dream-logo-fallback {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff; font-weight: 800; font-size: 15px;
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 2px 6px rgba(99,102,241,0.3);
   }
+  .dream-name-block { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .dream-name-input {
-    flex: 1; border: none; background: transparent; outline: none;
-    font-size: 16px; font-weight: 700; color: var(--text);
-    padding: 6px 0; border-bottom: 1.5px solid transparent;
+    border: none; background: transparent; outline: none;
+    font-size: 15px; font-weight: 700; color: var(--text-strong);
+    padding: 4px 0; border-bottom: 1.5px solid transparent;
     transition: border-color 0.15s;
+    width: 100%;
   }
-  .dream-name-input:focus, .dream-name-input:hover {
-    border-bottom-color: var(--accent);
+  .dream-name-input:focus { border-bottom-color: var(--accent); }
+  .dream-name-sub {
+    font-size: 12px; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-top: 0;
   }
   .dream-remove {
     background: transparent; border: 1px solid transparent;
-    color: var(--muted); width: 30px; height: 30px; border-radius: 7px;
-    font-size: 14px; cursor: pointer; transition: all 0.15s;
+    color: var(--muted); width: 28px; height: 28px; border-radius: 7px;
+    font-size: 13px; cursor: pointer; transition: all 0.15s;
     display: flex; align-items: center; justify-content: center;
+    opacity: 0;
   }
-  .dream-remove:hover { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+  .dream-card:hover .dream-remove { opacity: 1; }
+  .dream-remove:hover { background: var(--danger-bg); color: var(--danger); border-color: rgba(248,113,113,0.35); }
+  .dream-chevron {
+    color: var(--muted); font-size: 13px;
+    transition: transform 0.2s; flex-shrink: 0;
+  }
+  .dream-card.expanded .dream-chevron { transform: rotate(180deg); color: var(--accent); }
+  .dream-body {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.25s ease, padding 0.25s ease;
+    padding: 0 16px;
+    border-top: 1px solid transparent;
+  }
+  .dream-card.expanded .dream-body {
+    max-height: 500px;
+    padding: 14px 16px 16px;
+    border-top-color: var(--border);
+  }
+  .dream-field-label {
+    display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--muted); margin: 4px 0 5px;
+  }
+  .dream-domain-row { display: flex; flex-direction: column; margin-bottom: 10px; }
+  .dream-domain-input {
+    width: 100%; padding: 7px 10px; border: 1px solid var(--input-border);
+    border-radius: 7px; background: var(--input-bg); color: var(--text);
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .dream-domain-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
   .dream-notes {
-    width: 100%; resize: vertical; min-height: 60px;
-    padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+    width: 100%; resize: vertical; min-height: 80px;
+    padding: 10px 12px; border: 1px solid var(--input-border); border-radius: 8px;
     font-family: inherit; font-size: 13px; line-height: 1.55; color: var(--text);
-    background: var(--bg); transition: border-color 0.15s;
+    background: var(--input-bg); transition: border-color 0.15s, box-shadow 0.15s;
     box-sizing: border-box;
   }
-  .dream-notes:focus { outline: none; border-color: var(--accent); background: var(--card-bg); }
+  .dream-notes:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
   .dream-empty {
     text-align: center; padding: 50px 20px;
     background: var(--card-bg); border: 1px dashed var(--border);
@@ -2806,11 +2853,44 @@ function renderCompanySection() {
 }
 
 // ── Dream Companies ──────────────────────────────────────────────
+// Known domain overrides for tricky names. Anything not here falls back
+// to slugified-name.com (works for the vast majority of brands).
+const DREAM_DOMAIN_MAP = {
+  'youtube': 'youtube.com',
+  'google':  'google.com',
+  'facebook':'facebook.com',
+  'meta':    'meta.com',
+  'instagram':'instagram.com',
+  'twitter': 'twitter.com',
+  'x':       'x.com',
+  'github':  'github.com',
+  'linkedin':'linkedin.com',
+  'amazon':  'amazon.com',
+  'aws':     'aws.amazon.com',
+  'microsoft':'microsoft.com',
+  'openai':  'openai.com',
+  'anthropic':'anthropic.com'
+};
+
+function inferDomain(name) {
+  if (!name) return '';
+  const slug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '');
+  if (!slug) return '';
+  if (DREAM_DOMAIN_MAP[slug]) return DREAM_DOMAIN_MAP[slug];
+  return slug + '.com';
+}
+
+function companyLogoUrl(name, domainOverride) {
+  const d = (domainOverride && domainOverride.trim()) || inferDomain(name);
+  if (!d) return '';
+  return `https://logo.clearbit.com/${d}`;
+}
+
 const DEFAULT_DREAM_COMPANIES = [
-  { name: 'Twilio',  notes: '' },
-  { name: 'YouTube', notes: '' },
-  { name: 'Slack',   notes: '' },
-  { name: 'Apple',   notes: '' }
+  { name: 'Twilio',  notes: '', domain: 'twilio.com',  expanded: false },
+  { name: 'YouTube', notes: '', domain: 'youtube.com', expanded: false },
+  { name: 'Slack',   notes: '', domain: 'slack.com',   expanded: false },
+  { name: 'Apple',   notes: '', domain: 'apple.com',   expanded: false }
 ];
 
 function loadDreamCompanies() {
@@ -2818,11 +2898,30 @@ function loadDreamCompanies() {
     const raw = localStorage.getItem('pm_dream_companies');
     if (raw === null) return DEFAULT_DREAM_COMPANIES.slice();
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : DEFAULT_DREAM_COMPANIES.slice();
+    if (!Array.isArray(parsed)) return DEFAULT_DREAM_COMPANIES.slice();
+    // Migration: ensure domain field exists
+    return parsed.map(c => ({
+      name: c.name || '',
+      notes: c.notes || '',
+      domain: c.domain || inferDomain(c.name),
+      expanded: !!c.expanded
+    }));
   } catch(e) { return DEFAULT_DREAM_COMPANIES.slice(); }
 }
 function saveDreamCompanies(list) {
   localStorage.setItem('pm_dream_companies', JSON.stringify(list));
+}
+
+function logoElementHtml(c) {
+  const url = companyLogoUrl(c.name, c.domain);
+  const initial = ((c.name || '?').trim().charAt(0) || '?').toUpperCase();
+  if (!url) return `<div class="dream-logo dream-logo-fallback">${escapeHtml(initial)}</div>`;
+  // <img> with onerror fallback to letter
+  return `<div class="dream-logo-wrap">
+    <img class="dream-logo-img" src="${url}" alt=""
+         onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+    <div class="dream-logo dream-logo-fallback" style="display:none">${escapeHtml(initial)}</div>
+  </div>`;
 }
 
 function renderDreamCompanies() {
@@ -2837,20 +2936,55 @@ function renderDreamCompanies() {
     </div>`;
     return;
   }
-  container.innerHTML = list.map((c, i) => `
-    <div class="dream-card" id="dream-card-${i}">
-      <div class="dream-card-header">
-        <div class="dream-logo">${escapeHtml((c.name || '?').trim().charAt(0).toUpperCase())}</div>
-        <input class="dream-name-input" type="text" value="${escapeHtml(c.name || '')}"
-               placeholder="Company name"
-               oninput="updateDreamCompany(${i}, 'name', this.value)">
-        <button class="dream-remove" onclick="removeDreamCompany(${i})" title="Remove">✕</button>
+  container.innerHTML = list.map((c, i) => {
+    const expanded = !!c.expanded;
+    const notesPreview = (c.notes || '').trim().slice(0, 80);
+    return `
+    <div class="dream-card${expanded ? ' expanded' : ''}" id="dream-card-${i}">
+      <div class="dream-row" onclick="toggleDreamCard(${i}, event)">
+        ${logoElementHtml(c)}
+        <div class="dream-name-block">
+          <input class="dream-name-input" type="text" value="${escapeHtml(c.name || '')}"
+                 placeholder="Company name"
+                 onclick="event.stopPropagation()"
+                 onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+                 onblur="dreamNameBlur(${i}, this.value)">
+          ${!expanded && notesPreview ? `<div class="dream-name-sub">${escapeHtml(notesPreview)}${(c.notes || '').length > 80 ? '…' : ''}</div>` : ''}
+        </div>
+        <button class="dream-remove" onclick="event.stopPropagation();removeDreamCompany(${i})" title="Remove">✕</button>
+        <span class="dream-chevron">▾</span>
       </div>
-      <textarea class="dream-notes" rows="3"
-        placeholder="Notes — why this company, mission alignment, product areas you'd want to work on, contacts…"
-        oninput="updateDreamCompany(${i}, 'notes', this.value)">${escapeHtml(c.notes || '')}</textarea>
-    </div>
-  `).join('');
+      <div class="dream-body">
+        <div class="dream-domain-row">
+          <label class="dream-field-label">Website</label>
+          <input class="dream-domain-input" type="text" value="${escapeHtml(c.domain || '')}"
+                 placeholder="e.g. twilio.com"
+                 oninput="updateDreamCompany(${i}, 'domain', this.value)">
+        </div>
+        <label class="dream-field-label">Notes</label>
+        <textarea class="dream-notes" rows="4"
+          placeholder="Why this company — mission alignment, product areas you'd want to work on, key contacts, recent news, prep status…"
+          oninput="updateDreamCompany(${i}, 'notes', this.value)">${escapeHtml(c.notes || '')}</textarea>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleDreamCard(idx, e) {
+  // Don't toggle when clicking on the inputs or remove button
+  if (e && (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' ||
+            e.target.tagName === 'TEXTAREA' || e.target.closest('.dream-body'))) return;
+  const list = loadDreamCompanies();
+  if (!list[idx]) return;
+  list[idx].expanded = !list[idx].expanded;
+  saveDreamCompanies(list);
+  // Animate via class toggle without full re-render of the body
+  const card = document.getElementById('dream-card-' + idx);
+  if (card) {
+    card.classList.toggle('expanded', list[idx].expanded);
+    // Refresh the preview sub-text on collapse
+    if (!list[idx].expanded) renderDreamCompanies();
+  }
 }
 
 function updateDreamCompany(idx, field, value) {
@@ -2858,19 +2992,29 @@ function updateDreamCompany(idx, field, value) {
   if (!list[idx]) return;
   list[idx][field] = value;
   saveDreamCompanies(list);
-  // Update logo initial in-place without full re-render
-  if (field === 'name') {
-    const logo = document.querySelector(`#dream-card-${idx} .dream-logo`);
-    if (logo) logo.textContent = ((value || '?').trim().charAt(0) || '?').toUpperCase();
+}
+
+function dreamNameBlur(idx, value) {
+  const list = loadDreamCompanies();
+  if (!list[idx]) return;
+  const oldName = list[idx].name;
+  list[idx].name = value;
+  // If domain was previously auto-inferred (matches old slug pattern), update it
+  const expectedOld = inferDomain(oldName);
+  if (!list[idx].domain || list[idx].domain === expectedOld) {
+    list[idx].domain = inferDomain(value);
   }
+  saveDreamCompanies(list);
+  renderDreamCompanies();
 }
 
 function addDreamCompany() {
   const list = loadDreamCompanies();
-  list.push({ name: '', notes: '' });
+  // Collapse all others, expand the new one
+  list.forEach(c => c.expanded = false);
+  list.push({ name: '', notes: '', domain: '', expanded: true });
   saveDreamCompanies(list);
   renderDreamCompanies();
-  // Focus the new card's name input
   setTimeout(() => {
     const card = document.getElementById('dream-card-' + (list.length - 1));
     const input = card?.querySelector('.dream-name-input');
