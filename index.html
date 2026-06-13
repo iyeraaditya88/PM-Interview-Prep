@@ -4646,6 +4646,9 @@ const _lastSection = (function(){ try { return localStorage.getItem('pm_last_sec
 showSection(_lastSection || 'intro');
 </script>
 
+<!-- Supabase — must load before the sync script below -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
 // ══════════════════════════════════════════════════════════════════
 // SUPABASE SYNC
@@ -4806,9 +4809,6 @@ function safeParseLS(key, fallback) {
 // ── Init ──────────────────────────────────────────────────────────
 initSupabase();
 </script>
-
-<!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- PDF.js for PDF parsing -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
