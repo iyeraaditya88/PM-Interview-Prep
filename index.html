@@ -244,8 +244,9 @@
   :root[data-theme="dark"] .nav-section-label { color: #a5b4fc; opacity: 0.95; }
 
   #sidebar-footer {
-    padding: 10px 20px;
+    padding: 10px 16px 14px;
     border-top: 1px solid #2d2d4e;
+    display: flex; flex-direction: column; gap: 8px;
   }
 
   .save-indicator {
@@ -253,6 +254,71 @@
     font-size: 11px;
     color: #555875;
   }
+
+  /* ── Auth widget in sidebar ── */
+  #auth-widget {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  #auth-status-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; color: var(--muted);
+  }
+  #auth-status-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #ef4444; flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  #auth-status-dot.connected { background: #10b981; }
+  #auth-status-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #auth-action-btn {
+    width: 100%; padding: 7px 0; font-size: 12px; font-weight: 600;
+    border-radius: 7px; border: 1px solid var(--border); cursor: pointer;
+    background: var(--bg-soft); color: var(--text);
+    transition: background 0.15s, border-color 0.15s;
+  }
+  #auth-action-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+  #sync-status {
+    font-size: 10px; color: var(--muted); text-align: center; min-height: 14px;
+    transition: color 0.3s;
+  }
+  #sync-status.syncing { color: var(--accent); }
+  #sync-status.error { color: #f87171; }
+  #sync-status.ok { color: #34d399; }
+
+  /* ── Login Modal ── */
+  #login-modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+    z-index: 9000; align-items: center; justify-content: center;
+  }
+  #login-modal-overlay.open { display: flex; }
+  #login-modal {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 16px; padding: 36px 32px; width: 360px; max-width: 95vw;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+  }
+  #login-modal h2 {
+    font-size: 20px; font-weight: 800; color: var(--text-strong);
+    margin-bottom: 4px;
+  }
+  #login-modal p { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+  .login-field { margin-bottom: 14px; }
+  .login-field label { display: block; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 5px; }
+  .login-field input {
+    width: 100%; padding: 10px 12px; font-size: 14px; font-family: inherit;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--input-bg); color: var(--text); outline: none;
+    box-sizing: border-box; transition: border-color 0.15s;
+  }
+  .login-field input:focus { border-color: var(--accent); }
+  #login-submit-btn {
+    width: 100%; padding: 11px; font-size: 14px; font-weight: 700;
+    background: var(--accent); color: #fff; border: none; border-radius: 8px;
+    cursor: pointer; margin-top: 8px; transition: opacity 0.15s;
+  }
+  #login-submit-btn:hover { opacity: 0.88; }
+  #login-error { font-size: 12px; color: #f87171; margin-top: 10px; text-align: center; min-height: 16px; }
 
   /* ── Hamburger menu ── */
   #hamburger-btn {
@@ -2216,6 +2282,33 @@
   <nav id="nav"></nav>
   <div id="sidebar-footer">
     <div class="save-indicator" id="save-indicator">All changes auto-saved</div>
+    <div id="auth-widget">
+      <div id="auth-status-row">
+        <div id="auth-status-dot"></div>
+        <span id="auth-status-text">Not signed in</span>
+      </div>
+      <button id="auth-action-btn" onclick="handleAuthAction()">Sign In</button>
+      <div id="sync-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Login Modal -->
+<div id="login-modal-overlay">
+  <div id="login-modal">
+    <h2>🔐 Sign In</h2>
+    <p>Your data syncs to PostgreSQL across all devices.</p>
+    <div class="login-field">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter') submitLogin()">
+    </div>
+    <button id="login-submit-btn" onclick="submitLogin()">Sign In & Sync</button>
+    <div id="login-error"></div>
   </div>
 </div>
 
@@ -2293,6 +2386,7 @@ function saveState(state) {
   localStorage.setItem('pm_guide_state', JSON.stringify(state));
   updateProgress();
   showSaveIndicator();
+  scheduleSync();
 }
 
 function showSaveIndicator() {
@@ -2309,6 +2403,7 @@ function saveDocQBankAnswer(qid, val) {
   const state = loadDocQBankState();
   state[qid] = { answer: val, saved: Date.now() };
   localStorage.setItem('pm_doc_qbank', JSON.stringify(state));
+  scheduleSync();
 }
 function loadDocQBankAnswer(qid) {
   const state = loadDocQBankState();
@@ -2319,6 +2414,7 @@ function toggleDocQBankStar(qid) {
   if (!state[qid]) state[qid] = {};
   state[qid].starred = !state[qid].starred;
   localStorage.setItem('pm_doc_qbank', JSON.stringify(state));
+  scheduleSync();
   const btn = document.getElementById('star-'+qid);
   if (btn) { btn.classList.toggle('starred'); btn.textContent = state[qid].starred ? '★ Starred' : '☆ Star'; }
 }
@@ -2620,6 +2716,7 @@ function showSection(id) {
   if (navItem) navItem.classList.add('active');
   currentSection = id;
   try { localStorage.setItem('pm_last_section', id); } catch(e) {}
+  scheduleSync();
   window.scrollTo(0, 0);
 }
 
@@ -2919,6 +3016,7 @@ function loadDreamCompanies() {
 }
 function saveDreamCompanies(list) {
   localStorage.setItem('pm_dream_companies', JSON.stringify(list));
+  scheduleSync();
 }
 
 function logoElementHtml(c, idx) {
@@ -3062,6 +3160,7 @@ function loadStoryBank() {
 }
 function saveStoryBank(list) {
   localStorage.setItem('pm_story_bank', JSON.stringify(list));
+  scheduleSync();
 }
 
 function renderStoryBank() {
@@ -3358,6 +3457,7 @@ function loadResumeState() {
 }
 function saveResumeState(state) {
   localStorage.setItem('pm_resume', JSON.stringify(state));
+  scheduleSync();
 }
 function saveResumeFileData(b64, ext) {
   try { localStorage.setItem('pm_resume_file', JSON.stringify({ b64, ext })); } catch(e) {}
@@ -4133,6 +4233,7 @@ function loadCuratedState() {
 }
 function saveCuratedState(state) {
   localStorage.setItem('pm_curated', JSON.stringify(state));
+  scheduleSync();
 }
 
 function getApiKey() { return localStorage.getItem('pm_api_key') || ''; }
@@ -4143,6 +4244,7 @@ function toggleTheme() {
   const next = isDark ? 'light' : 'dark';
   root.setAttribute('data-theme', next);
   try { localStorage.setItem('pm_theme', next); } catch(e) {}
+  scheduleSync();
   const icon = document.getElementById('theme-icon');
   if (icon) icon.textContent = next === 'dark' ? '🌙' : '☀️';
 }
@@ -4543,6 +4645,170 @@ updateProgress();
 const _lastSection = (function(){ try { return localStorage.getItem('pm_last_section'); } catch(e) { return null; } })();
 showSection(_lastSection || 'intro');
 </script>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// SUPABASE SYNC
+// ══════════════════════════════════════════════════════════════════
+const SB_URL  = 'https://wqbdiglbatiznlvnwbgu.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxYmRpZ2xiYXRpem5sdm53Ymd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzODExMTEsImV4cCI6MjA5Njk1NzExMX0.L8uMq5jtjjdWTofrQqMQmtYjeA_sGwBIudLg44ZRIz4';
+let sb = null;
+let _syncTimer = null;
+let _currentUser = null;
+
+function initSupabase() {
+  try {
+    sb = supabase.createClient(SB_URL, SB_KEY);
+    sb.auth.onAuthStateChange(async (event, session) => {
+      _currentUser = session?.user || null;
+      updateAuthUI();
+      if (event === 'SIGNED_IN') {
+        setSyncStatus('Loading your data…', 'syncing');
+        await loadFromSupabase();
+        setSyncStatus('Synced ✓', 'ok');
+        setTimeout(() => setSyncStatus(''), 3000);
+        // re-render everything with loaded data
+        buildNav(); buildContent();
+        const ls = (function(){ try { return localStorage.getItem('pm_last_section'); } catch(e){ return null; } })();
+        showSection(ls || 'intro');
+      }
+    });
+    // restore existing session silently
+    sb.auth.getSession().then(({ data }) => {
+      _currentUser = data?.session?.user || null;
+      updateAuthUI();
+    });
+  } catch(e) { console.error('Supabase init failed', e); }
+}
+
+function updateAuthUI() {
+  const dot  = document.getElementById('auth-status-dot');
+  const text = document.getElementById('auth-status-text');
+  const btn  = document.getElementById('auth-action-btn');
+  if (!dot) return;
+  if (_currentUser) {
+    dot.classList.add('connected');
+    text.textContent = _currentUser.email;
+    btn.textContent  = 'Sign Out';
+  } else {
+    dot.classList.remove('connected');
+    text.textContent = 'Not signed in';
+    btn.textContent  = 'Sign In';
+  }
+}
+
+function setSyncStatus(msg, cls) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = cls ? `${cls}` : '';
+}
+
+// ── Auth actions ──────────────────────────────────────────────────
+function handleAuthAction() {
+  if (_currentUser) {
+    signOutUser();
+  } else {
+    document.getElementById('login-modal-overlay').classList.add('open');
+    setTimeout(() => document.getElementById('login-email')?.focus(), 100);
+  }
+}
+
+async function submitLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  const btn   = document.getElementById('login-submit-btn');
+  if (!email || !pass) { errEl.textContent = 'Please enter email and password.'; return; }
+  btn.textContent = 'Signing in…'; btn.disabled = true; errEl.textContent = '';
+  try {
+    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) throw error;
+    document.getElementById('login-modal-overlay').classList.remove('open');
+    document.getElementById('login-password').value = '';
+  } catch(e) {
+    errEl.textContent = e.message || 'Sign in failed.';
+  } finally {
+    btn.textContent = 'Sign In & Sync'; btn.disabled = false;
+  }
+}
+
+async function signOutUser() {
+  if (!sb) return;
+  await sb.auth.signOut();
+  _currentUser = null;
+  updateAuthUI();
+  setSyncStatus('Signed out', '');
+}
+
+// Close modal on overlay click
+document.getElementById('login-modal-overlay')?.addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+
+// ── Sync to Supabase ──────────────────────────────────────────────
+function scheduleSync() {
+  if (!sb || !_currentUser) return;
+  clearTimeout(_syncTimer);
+  setSyncStatus('Saving…', 'syncing');
+  _syncTimer = setTimeout(syncToSupabase, 800);
+}
+
+async function syncToSupabase() {
+  if (!sb || !_currentUser) return;
+  try {
+    const payload = {
+      user_id: _currentUser.id,
+      answers:          safeParseLS('pm_guide_state', {}),
+      resume_state:     safeParseLS('pm_resume', {}),
+      dream_companies:  safeParseLS('pm_dream_companies', []),
+      story_bank:       safeParseLS('pm_story_bank', []),
+      curated_resumes:  safeParseLS('pm_curated', {}),
+      settings: {
+        theme:        localStorage.getItem('pm_theme') || 'dark',
+        last_section: localStorage.getItem('pm_last_section') || 'intro',
+        api_key:      localStorage.getItem('pm_api_key') || '',
+        doc_qbank:    safeParseLS('pm_doc_qbank', {}),
+      },
+      updated_at: new Date().toISOString()
+    };
+    const { error } = await sb.from('portal_data').upsert(payload, { onConflict: 'user_id' });
+    if (error) throw error;
+    setSyncStatus('Synced ✓', 'ok');
+    setTimeout(() => setSyncStatus(''), 3000);
+  } catch(e) {
+    console.error('Sync error', e);
+    setSyncStatus('Sync failed', 'error');
+  }
+}
+
+async function loadFromSupabase() {
+  if (!sb || !_currentUser) return;
+  try {
+    const { data, error } = await sb.from('portal_data').select('*').eq('user_id', _currentUser.id).single();
+    if (error || !data) return;
+    if (data.answers)         localStorage.setItem('pm_guide_state',      JSON.stringify(data.answers));
+    if (data.resume_state)    localStorage.setItem('pm_resume',           JSON.stringify(data.resume_state));
+    if (data.dream_companies) localStorage.setItem('pm_dream_companies',  JSON.stringify(data.dream_companies));
+    if (data.story_bank)      localStorage.setItem('pm_story_bank',       JSON.stringify(data.story_bank));
+    if (data.curated_resumes) localStorage.setItem('pm_curated',          JSON.stringify(data.curated_resumes));
+    if (data.settings?.theme)        { localStorage.setItem('pm_theme', data.settings.theme); document.documentElement.setAttribute('data-theme', data.settings.theme); }
+    if (data.settings?.last_section) localStorage.setItem('pm_last_section', data.settings.last_section);
+    if (data.settings?.api_key)      localStorage.setItem('pm_api_key', data.settings.api_key);
+    if (data.settings?.doc_qbank)    localStorage.setItem('pm_doc_qbank', JSON.stringify(data.settings.doc_qbank));
+  } catch(e) { console.error('Load error', e); }
+}
+
+function safeParseLS(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch(e) { return fallback; }
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+initSupabase();
+</script>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- PDF.js for PDF parsing -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
