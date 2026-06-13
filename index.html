@@ -606,7 +606,7 @@
     border: none; background: transparent; color: var(--text);
     resize: vertical; outline: none;
   }
-  .doc-q-answer-area:focus { background: #fffdf5; }
+  .doc-q-answer-area:focus { background: var(--input-bg); }
   .doc-q-answer-area::placeholder { color: #9ca3af; font-style: italic; }
   .doc-q-footer {
     padding: 8px 18px;
@@ -762,8 +762,8 @@
     transition: border-color 0.15s, background 0.15s;
   }
   .answer-rendered:hover {
-    border-color: #c4b5fd;
-    background: #fff;
+    border-color: rgba(129,140,248,0.45);
+    background: var(--bg-soft);
   }
   .answer-rendered .al {
     display: inline-block;
@@ -790,7 +790,7 @@
   .answer-textarea:focus {
     outline: none;
     border-color: var(--accent);
-    background: #fff;
+    background: var(--input-bg);
   }
 
   .answer-textarea.modified { border-color: var(--success); }
@@ -967,7 +967,7 @@
     resize: vertical; outline: none;
   }
   .resume-base-area::placeholder { color: #9ca3af; font-style: italic; font-family: inherit; }
-  .resume-base-area:focus { background: #fffdf8; }
+  .resume-base-area:focus { background: var(--input-bg); }
   .resume-panel-footer {
     padding: 10px 20px; border-top: 1px solid var(--border);
     background: var(--bg); display: flex; align-items: center; gap: 12px;
@@ -1004,14 +1004,14 @@
     background: var(--bg); color: var(--text); outline: none;
     transition: border-color 0.15s;
   }
-  .resume-field-input:focus { border-color: var(--accent); background: #fff; }
+  .resume-field-input:focus { border-color: var(--accent); background: var(--input-bg); }
   .resume-jd-area {
     width: 100%; min-height: 160px; padding: 12px 14px;
     font-size: 13px; line-height: 1.7; font-family: inherit;
     border: 1px solid var(--border); border-radius: 7px;
     background: var(--bg); color: var(--text); resize: vertical; outline: none;
   }
-  .resume-jd-area:focus { border-color: var(--accent); background: #fff; }
+  .resume-jd-area:focus { border-color: var(--accent); background: var(--input-bg); }
   .resume-curate-btn {
     padding: 11px 28px; background: linear-gradient(135deg, #4f46e5, #7c3aed);
     color: #fff; border: none; border-radius: 8px;
@@ -1401,7 +1401,7 @@
     line-height: 1.5;
   }
 
-  .field-input:focus { outline: none; background: #fffbf0; }
+  .field-input:focus { outline: none; background: var(--input-bg); }
 
   .btn-add-company {
     padding: 10px 20px;
