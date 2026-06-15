@@ -2272,9 +2272,81 @@
   /* Curated learning answer body text */
   :root[data-theme="dark"] .cc-body p,
   :root[data-theme="dark"] .cc-body li { color: var(--text) !important; }
+
+  /* ── Mobile utility strip — hidden on desktop ── */
+  #sidebar-mobile-actions { display: none; }
+
+  /* ══════════════════════════════════════════════════
+     MOBILE RESPONSIVE  ≤768px
+     ══════════════════════════════════════════════════ */
+  @media (max-width: 768px) {
+
+    /* Sidebar: off-screen by default, slides in from left */
+    #sidebar {
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+      z-index: 200;
+    }
+    #sidebar.mobile-open { transform: translateX(0); }
+
+    /* Dark overlay behind open sidebar */
+    #sidebar-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55); z-index: 150;
+      backdrop-filter: blur(2px);
+    }
+    #sidebar-overlay.active { display: block; }
+
+    /* Main content: full width, reduced padding */
+    #main { margin-left: 0 !important; padding: 20px 16px; max-width: 100%; }
+
+    /* Tables: horizontal scroll */
+    .compare-table, .questions-table, .story-table {
+      display: block; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    }
+    .compare-table td, .compare-table th,
+    .questions-table td, .questions-table th,
+    .story-table td, .story-table th { white-space: normal; min-width: 90px; }
+
+    /* Grids: collapse to single column */
+    .curated-form-grid,
+    .curated-form-grid.three { grid-template-columns: 1fr !important; }
+    .fdoc-values-grid { grid-template-columns: 1fr; }
+    .resume-curate-row { grid-template-columns: 1fr !important; }
+
+    /* Section header */
+    .section-header h2 { font-size: 20px; }
+    .section-header { margin-bottom: 16px; }
+
+    /* Hamburger dropdown: constrain to screen width */
+    #hamburger-menu { max-width: calc(100vw - 36px); }
+
+    /* Login modal: fit small screens */
+    #login-modal { width: calc(100vw - 32px) !important; padding: 28px 20px; }
+
+    /* Mobile action strip visible inside sidebar */
+    #sidebar-mobile-actions {
+      display: flex; flex-direction: column;
+      border-top: 1px solid var(--border); margin-top: 8px; padding-top: 8px;
+    }
+    .sidebar-action-btn {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px; font-size: 13px; font-weight: 500;
+      color: var(--sidebar-text); background: none; border: none;
+      cursor: pointer; text-align: left; width: 100%; border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .sidebar-action-btn:hover { background: var(--sidebar-hover); color: #fff; }
+
+    /* Q-cards: tighter padding */
+    .q-card { padding: 16px; }
+    .answer-rendered, .answer-textarea { font-size: 13px; }
+    .resume-panel-body, .resume-curate-body { padding: 16px; }
+  }
 </style>
 </head>
 <body>
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
 
 <div id="sidebar">
   <div id="sidebar-header">
@@ -2285,6 +2357,11 @@
   <nav id="nav"></nav>
   <div id="sidebar-footer">
     <div class="save-indicator" id="save-indicator">All changes auto-saved</div>
+    <div id="sidebar-mobile-actions">
+      <button class="sidebar-action-btn" onclick="toggleTheme()">🌙 Toggle Theme</button>
+      <button class="sidebar-action-btn" onclick="window.print();closeSidebar()">🖨️ Print / PDF</button>
+      <button class="sidebar-action-btn" onclick="openSettings();closeSidebar()">⚙️ API Key</button>
+    </div>
     <div id="auth-widget">
       <div id="auth-status-row">
         <div id="auth-status-dot"></div>
@@ -2310,7 +2387,7 @@
 </div>
 
 <!-- Hamburger Menu -->
-<button id="hamburger-btn" onclick="toggleHamburger()" aria-label="Menu">
+<button id="hamburger-btn" onclick="handleHamburgerClick()" aria-label="Menu">
   <span></span><span></span><span></span>
 </button>
 <div id="hamburger-menu">
@@ -2714,6 +2791,7 @@ function showSection(id) {
   currentSection = id;
   try { localStorage.setItem('pm_last_section', id); } catch(e) {}
   scheduleSync();
+  if (window.innerWidth <= 768) closeSidebar();
   window.scrollTo(0, 0);
 }
 
@@ -4315,6 +4393,37 @@ function toggleHamburger() {
   btn.classList.toggle('open', !isOpen);
   menu.classList.toggle('open', !isOpen);
 }
+function handleHamburgerClick() {
+  if (window.innerWidth <= 768) {
+    toggleSidebar();
+  } else {
+    toggleHamburger();
+  }
+}
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.classList.contains('mobile-open') ? closeSidebar() : openSidebar();
+}
+
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('mobile-open');
+  document.getElementById('sidebar-overlay').classList.add('active');
+  document.getElementById('hamburger-btn').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('sidebar-overlay').classList.remove('active');
+  document.getElementById('hamburger-btn').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+window.addEventListener('resize', function() {
+  if (window.innerWidth > 768) closeSidebar();
+});
+
 // Close hamburger when clicking outside
 document.addEventListener('click', function(e) {
   const btn = document.getElementById('hamburger-btn');
